@@ -3,7 +3,14 @@
  * HackMatrix 1.0 - Participant Management
  */
 
-require_once __DIR__ . '/header.php';
+@set_time_limit(0);
+@ini_set('memory_limit', '512M');
+
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Enforce login on all admin pages
+requireLogin();
 
 $pdo = getDBConnection();
 $error = '';
@@ -11,7 +18,7 @@ $successMsg = '';
 $invalidRows = [];
 $importCount = 0;
 
-// 1. Handle CSV Export
+// 1. Handle CSV Export (MUST be handled before outputting any HTML content)
 if (isset($_GET['export'])) {
     // Generate CSV output directly to browser
     header('Content-Type: text/csv; charset=utf-8');
@@ -28,6 +35,8 @@ if (isset($_GET['export'])) {
     fclose($output);
     exit();
 }
+
+require_once __DIR__ . '/header.php';
 
 // 2. Handle CSV Upload and Import
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_csv'])) {

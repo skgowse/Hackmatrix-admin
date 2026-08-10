@@ -3,6 +3,9 @@
  * HackMatrix 1.0 - Certificate Generation & Email Distribution
  */
 
+@set_time_limit(0);
+@ini_set('memory_limit', '512M');
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/certificate.php';
