@@ -1,0 +1,7 @@
+/vendor/
+/certificates/*.pdf
+/uploads/templates/template_*
+/logs/*.log
+composer.phar
+.DS_Store
+*.tmp
