@@ -29,6 +29,9 @@ function getMailerInstance($smtp = null) {
     
     $mail = new PHPMailer(true);
     
+    // Set a 15-second connection timeout to prevent script hangs and network errors on slow mail hosts
+    $mail->Timeout = 15;
+    
     // Server settings
     $mail->isSMTP();
     $mail->Host       = $smtp['smtp_host'];
