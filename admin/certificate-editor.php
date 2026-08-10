@@ -112,8 +112,6 @@ foreach ($fieldsList as $f) {
             <select id="activeFieldSelector" class="form-control">
                 <option value="participant_name">Name ({{participant_name}})</option>
                 <option value="branch">Branch ({{branch}})</option>
-                <option value="team_name">Team Name ({{team_name}})</option>
-                <option value="team_no">Team Number ({{team_no}})</option>
                 <option value="certificate_id">Certificate ID ({{certificate_id}})</option>
             </select>
         </div>
@@ -175,8 +173,6 @@ foreach ($fieldsList as $f) {
             <!-- Draggable Fields Overlays -->
             <div id="participant_name_drag" class="draggable-field" data-field="participant_name">Rahul Kumar</div>
             <div id="branch_drag" class="draggable-field" data-field="branch">Artificial Intelligence & Data Science</div>
-            <div id="team_name_drag" class="draggable-field" data-field="team_name">Team Alpha</div>
-            <div id="team_no_drag" class="draggable-field" data-field="team_no">HM001</div>
             <div id="certificate_id_drag" class="draggable-field" data-field="certificate_id">HM26-001</div>
         </div>
     </div>
@@ -284,7 +280,7 @@ foreach ($fieldsList as $f) {
         wrapper.style.height = containerHeight + 'px';
         
         // Position fields according to loaded config (or defaults)
-        const fields = ['participant_name', 'branch', 'team_name', 'team_no', 'certificate_id'];
+        const fields = ['participant_name', 'branch', 'certificate_id'];
         
         fields.forEach(f => {
             const dragEl = document.getElementById(f + '_drag');
@@ -459,7 +455,7 @@ foreach ($fieldsList as $f) {
     // Save Config Action via AJAX
     document.getElementById('saveConfigBtn').addEventListener('click', function() {
         const fieldsData = [];
-        const fields = ['participant_name', 'branch', 'team_name', 'team_no', 'certificate_id'];
+        const fields = ['participant_name', 'branch', 'certificate_id'];
         
         fields.forEach(f => {
             if (config[f]) {
