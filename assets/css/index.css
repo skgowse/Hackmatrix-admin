@@ -257,6 +257,19 @@ body {
 .stat-card-icon.yellow { background: rgba(245, 158, 11, 0.08); color: var(--warning); }
 .stat-card-icon.purple { background: rgba(99, 102, 241, 0.08); color: var(--accent-secondary); }
 
+.stat-card-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    transition: var(--transition);
+}
+
+.stat-card:hover .stat-card-icon svg {
+    transform: scale(1.1);
+}
+
 .stat-card-info h3 {
     font-size: 13px;
     color: var(--text-muted);
