@@ -72,15 +72,17 @@ class CertificateGenerator {
             }
         }
         
-        // Base vertical anchor (default to 53% if name field settings are missing)
-        $base_y = 111.3;
+        // Coordinates in mm
+        $name_x = 148.5; // default center
+        $name_y = 111.3; // default center Y (53%)
         $nameFont = 'helvetica';
         $nameStyle = 'B';
         $nameSize = 28;
         $nameColor = '#1e3a8a';
         
         if ($nameField) {
-            $base_y = ($nameField['y_position'] / 100) * $pageHeight;
+            $name_x = ($nameField['x_position'] / 100) * $pageWidth;
+            $name_y = ($nameField['y_position'] / 100) * $pageHeight;
             $nameFont = $nameField['font_name'];
             $nameStyle = $nameField['font_style'];
             $nameSize = intval($nameField['font_size']);
@@ -88,11 +90,16 @@ class CertificateGenerator {
         }
         list($nr, $ng, $nb) = sscanf($nameColor, "#%02x%02x%02x");
         
+        $branch_x = 148.5;
+        $branch_y = 134.4; // default center Y (64%)
         $branchFont = 'helvetica';
         $branchStyle = 'B';
         $branchSize = 16;
         $branchColor = '#1e3a8a';
+        
         if ($branchField) {
+            $branch_x = ($branchField['x_position'] / 100) * $pageWidth;
+            $branch_y = ($branchField['y_position'] / 100) * $pageHeight;
             $branchFont = $branchField['font_name'];
             $branchStyle = $branchField['font_style'];
             $branchSize = intval($branchField['font_size']);
@@ -100,9 +107,22 @@ class CertificateGenerator {
         }
         list($br, $bg, $bb) = sscanf($branchColor, "#%02x%02x%02x");
         
+        $cert_x = 253.9; // default 85.5%
+        $cert_y = 202.6; // default 96.5%
+        $certFont = 'helvetica';
+        $certStyle = 'B';
+        $certSize = 11;
         $certColor = '#1e3a8a';
+        $certAlign = 'C';
+        
         if ($certField) {
+            $cert_x = ($certField['x_position'] / 100) * $pageWidth;
+            $cert_y = ($certField['y_position'] / 100) * $pageHeight;
+            $certFont = $certField['font_name'];
+            $certStyle = $certField['font_style'];
+            $certSize = intval($certField['font_size']);
             $certColor = $certField['text_color'];
+            $certAlign = $certField['alignment'];
         }
         list($cr, $cg, $cb) = sscanf($certColor, "#%02x%02x%02x");
 
@@ -120,45 +140,57 @@ class CertificateGenerator {
             $branchText = ucwords(strtolower($branchText));
         }
 
-        // 1. Draw "This certificate is proudly presented to"
+        // 1. Draw "This certificate is proudly presented to" (13mm above the name)
         $pdf->SetFont('helvetica', 'I', 12);
         $pdf->SetTextColor(75, 85, 99);
-        $pdf->SetXY(0, $base_y - 14);
+        $pdf->SetXY(0, $name_y - 13);
         $pdf->Cell($pageWidth, 6, "This certificate is proudly presented to", 0, 0, 'C');
 
         // 2. Draw Candidate Name
         $pdf->SetFont($nameFont, $nameStyle, $nameSize);
         $pdf->SetTextColor($nr, $ng, $nb);
         $cellHeight = $nameSize * 0.45;
-        $pdf->SetXY(0, $base_y - ($cellHeight / 2));
+        $pdf->SetXY(0, $name_y - ($cellHeight / 2));
         $pdf->Cell($pageWidth, $cellHeight, $nameText, 0, 0, 'C');
 
-        // 3. Draw "of"
+        // 3. Draw "of" (perfectly centered between Name and Branch Y positions)
         $pdf->SetFont('helvetica', 'I', 12);
         $pdf->SetTextColor(75, 85, 99);
-        $pdf->SetXY(0, $base_y + ($cellHeight / 2) + 2);
+        $of_y = ($name_y + $branch_y) / 2 - 2.5;
+        $pdf->SetXY(0, $of_y);
         $pdf->Cell($pageWidth, 5, "of", 0, 0, 'C');
 
         // 4. Draw Branch / Department
         $pdf->SetFont($branchFont, $branchStyle, $branchSize);
         $pdf->SetTextColor($br, $bg, $bb);
         $branchCellHeight = $branchSize * 0.45;
-        $pdf->SetXY(0, $base_y + ($cellHeight / 2) + 8);
+        $pdf->SetXY(0, $branch_y - ($branchCellHeight / 2));
         $pdf->Cell($pageWidth, $branchCellHeight, $branchText, 0, 0, 'C');
 
         // 5. Draw Description Paragraph
         $pdf->SetFont('helvetica', '', 11.5);
         $pdf->SetTextColor(55, 65, 81);
         $descText = "for successfully participating in HackMatrix 1.0, a 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.";
-        $desc_y = $base_y + ($cellHeight / 2) + 8 + $branchCellHeight + 5;
+        $desc_y = $branch_y + ($branchCellHeight / 2) + 5;
         $pdf->SetXY(($pageWidth - 210) / 2, $desc_y);
         $pdf->MultiCell(210, 5.5, $descText, 0, 'C', false);
 
-        // 6. Draw Certificate ID
-        $pdf->SetFont('helvetica', 'B', 10.5);
+        // 6. Draw Certificate ID (at its exact coordinate and alignment specified in the editor!)
+        $pdf->SetFont($certFont, $certStyle, $certSize);
         $pdf->SetTextColor($cr, $cg, $cb);
-        $pdf->SetXY(0, $desc_y + 16);
-        $pdf->Cell($pageWidth, 5, "Certificate ID: " . $participant['certificate_id'], 0, 0, 'C');
+        $certCellHeight = $certSize * 0.45;
+        $cert_text = "Certificate ID: " . $participant['certificate_id'];
+        
+        if ($certAlign === 'C') {
+            $pdf->SetXY(0, $cert_y - ($certCellHeight / 2));
+            $pdf->Cell($pageWidth, $certCellHeight, $cert_text, 0, 0, 'C');
+        } elseif ($certAlign === 'R') {
+            $pdf->SetXY(0, $cert_y - ($certCellHeight / 2));
+            $pdf->Cell($cert_x, $certCellHeight, $cert_text, 0, 0, 'R');
+        } else {
+            $pdf->SetXY($cert_x, $cert_y - ($certCellHeight / 2));
+            $pdf->Cell(0, $certCellHeight, $cert_text, 0, 0, 'L');
+        }
         
         // 3. Output PDF file
         if ($outputPath !== null) {
