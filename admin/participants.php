@@ -482,139 +482,132 @@ $participants = $stmt->fetchAll();
     </div>
 <?php endif; ?>
 
-<div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px;">
-    <!-- Import File Section -->
-    <div class="card" style="height: fit-content;">
-        <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 700;">Import CSV Candidates</h3>
-        <form method="POST" enctype="multipart/form-data">
-            <?php csrfInput(); ?>
-            <div class="form-group">
-                <label for="csv_file">CSV FILE</label>
-                <input type="file" id="csv_file" name="csv_file" class="form-control" accept=".csv" required style="padding: 8px 12px;">
-            </div>
-            
-            <button type="submit" name="import_csv" class="btn btn-secondary" style="width: 100%; margin-top: 10px;">
-                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Upload & Parse CSV
-            </button>
-        </form>
-        
-        <div style="margin-top: 20px; font-size: 11px; color: var(--text-muted); line-height: 1.5; border-top: 1px solid var(--border-color); padding-top: 16px;">
-            <strong>Expected CSV Layout (no spacing in header):</strong><br>
-            <code style="display: block; background: #080d1a; padding: 6px; border-radius: 4px; font-family: var(--font-mono); margin-top: 6px;">
-                team_no,team_name,participant_name,branch,email,certificate_id
-            </code>
+<!-- Import File Section -->
+<div class="card" style="margin-bottom: 24px;">
+    <h3 style="font-size: 16px; margin-bottom: 16px; font-weight: 700;">Import CSV Candidates</h3>
+    <form method="POST" enctype="multipart/form-data" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+        <?php csrfInput(); ?>
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 250px;">
+            <label for="csv_file" style="margin-bottom: 6px;">CSV FILE</label>
+            <input type="file" id="csv_file" name="csv_file" class="form-control" accept=".csv" required style="padding: 9px 12px; height: 42px;">
         </div>
-    </div>
+        
+        <button type="submit" name="import_csv" class="btn btn-secondary" style="height: 42px; padding: 0 24px; min-width: 180px;">
+            <svg viewBox="0 0 24 24" style="margin-right: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload & Parse CSV
+        </button>
+        
+        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; flex-basis: 100%; margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <strong>Expected CSV Layout (no spacing in header):</strong> <code style="background: #080d1a; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono);">team_no,team_name,participant_name,branch,email,certificate_id</code>
+        </div>
+    </form>
+</div>
 
-    <!-- Listing & Filters Section -->
-    <div>
-        <div class="card" style="padding: 18px 24px;">
-            <!-- Controls bar -->
-            <form method="GET" class="table-controls">
-                <div class="search-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" name="search" class="form-control" placeholder="Search by name, email, team..." value="<?= e($search) ?>">
-                </div>
-                
-                <div style="display: flex; gap: 12px; align-items: center; flex: 1; justify-content: flex-end;">
-                    <select name="branch" class="form-control" style="max-width: 200px; margin-bottom: 0;">
-                        <option value="">All Branches</option>
-                        <?php foreach ($branches as $br): ?>
-                            <option value="<?= e($br) ?>" <?= $branchFilter === $br ? 'selected' : '' ?>><?= e($br) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    
-                    <button type="submit" class="btn btn-secondary">Filter</button>
-                    
-                    <?php if ($search !== '' || $branchFilter !== ''): ?>
-                        <a href="participants.php" class="btn btn-secondary" style="padding: 12px;">Clear</a>
-                    <?php endif; ?>
-                </div>
-            </form>
+<!-- Listing & Filters Section -->
+<div class="card" style="padding: 18px 24px;">
+    <!-- Controls bar -->
+    <form method="GET" class="table-controls">
+        <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" name="search" class="form-control" placeholder="Search by name, email, team..." value="<?= e($search) ?>">
+        </div>
+        
+        <div style="display: flex; gap: 12px; align-items: center; flex: 1; justify-content: flex-end;">
+            <select name="branch" class="form-control" style="max-width: 200px; margin-bottom: 0;">
+                <option value="">All Branches</option>
+                <?php foreach ($branches as $br): ?>
+                    <option value="<?= e($br) ?>" <?= $branchFilter === $br ? 'selected' : '' ?>><?= e($br) ?></option>
+                <?php endforeach; ?>
+            </select>
             
-            <!-- Table -->
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Certificate ID</th>
-                            <th>Participant Name</th>
-                            <th>Email</th>
-                            <th>Branch</th>
-                            <th>Team Details</th>
-                            <th style="text-align: right; width: 120px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (count($participants) > 0): ?>
-                            <?php foreach ($participants as $p): ?>
-                                <tr>
-                                    <td style="font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--accent-primary);">
-                                        <?= e($p['certificate_id']) ?>
-                                    </td>
-                                    <td style="font-weight: 600; color: white;">
-                                        <?= e($p['participant_name']) ?>
-                                    </td>
-                                    <td><?= e($p['email']) ?></td>
-                                    <td><?= e($p['branch']) ?></td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 600;"><?= e($p['team_name']) ?></div>
-                                        <div style="font-size: 11px; color: var(--text-muted);">No: <?= e($p['team_no']) ?></div>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <div style="display: inline-flex; gap: 8px;">
-                                            <button onclick="openEditModal(<?= e(json_encode($p)) ?>)" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;">
-                                                Edit
-                                            </button>
-                                            
-                                            <form method="POST" onsubmit="return confirm('Are you sure you want to delete this participant? All generated certificates and email logs will be deleted.');">
-                                                <?php csrfInput(); ?>
-                                                <input type="hidden" name="delete_id" value="<?= $p['id'] ?>">
-                                                <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                    No participants found.
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+            <button type="submit" class="btn btn-secondary">Filter</button>
             
-            <!-- Pagination -->
-            <?php if ($totalPages > 1): ?>
-                <div class="pagination">
-                    <span style="font-size: 13px; color: var(--text-muted);">Showing <?= $offset + 1 ?> to <?= min($offset + $limit, $totalRows) ?> of <?= $totalRows ?> participants</span>
-                    <div class="pagination-links">
-                        <?php if ($page > 1): ?>
-                            <a href="participants.php?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>&branch=<?= urlencode($branchFilter) ?>">&laquo; Prev</a>
-                        <?php endif; ?>
-                        
-                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                            <?php if ($i == $page): ?>
-                                <span class="active"><?= $i ?></span>
-                            <?php else: ?>
-                                <a href="participants.php?page=<?= $i ?>&search=<?= urlencode($search) ?>&branch=<?= urlencode($branchFilter) ?>"><?= $i ?></a>
-                            <?php endif; ?>
-                        <?php endfor; ?>
-                        
-                        <?php if ($page < $totalPages): ?>
-                            <a href="participants.php?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>&branch=<?= urlencode($branchFilter) ?>">Next &raquo;</a>
-                        <?php endif; ?>
-                    </div>
-                </div>
+            <?php if ($search !== '' || $branchFilter !== ''): ?>
+                <a href="participants.php" class="btn btn-secondary" style="padding: 12px;">Clear</a>
             <?php endif; ?>
         </div>
+    </form>
+    
+    <!-- Table -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Certificate ID</th>
+                    <th>Participant Name</th>
+                    <th>Email</th>
+                    <th>Branch</th>
+                    <th>Team Details</th>
+                    <th style="text-align: right; width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (count($participants) > 0): ?>
+                    <?php foreach ($participants as $p): ?>
+                        <tr>
+                            <td style="font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--accent-primary);">
+                                <?= e($p['certificate_id']) ?>
+                            </td>
+                            <td style="font-weight: 600; color: white;">
+                                <?= e($p['participant_name']) ?>
+                            </td>
+                            <td><?= e($p['email']) ?></td>
+                            <td><?= e($p['branch']) ?></td>
+                            <td>
+                                <div style="font-size: 13px; font-weight: 600;"><?= e($p['team_name']) ?></div>
+                                <div style="font-size: 11px; color: var(--text-muted);">No: <?= e($p['team_no']) ?></div>
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 8px;">
+                                    <button onclick="openEditModal(<?= e(json_encode($p)) ?>)" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;">
+                                        Edit
+                                    </button>
+                                    
+                                    <form method="POST" onsubmit="return confirm('Are you sure you want to delete this participant? All generated certificates and email logs will be deleted.');">
+                                        <?php csrfInput(); ?>
+                                        <input type="hidden" name="delete_id" value="<?= $p['id'] ?>">
+                                        <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            No participants found.
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
+    
+    <!-- Pagination -->
+    <?php if ($totalPages > 1): ?>
+        <div class="pagination">
+            <span style="font-size: 13px; color: var(--text-muted);">Showing <?= $offset + 1 ?> to <?= min($offset + $limit, $totalRows) ?> of <?= $totalRows ?> participants</span>
+            <div class="pagination-links">
+                <?php if ($page > 1): ?>
+                    <a href="participants.php?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>&branch=<?= urlencode($branchFilter) ?>">&laquo; Prev</a>
+                <?php endif; ?>
+                
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <?php if ($i == $page): ?>
+                        <span class="active"><?= $i ?></span>
+                    <?php else: ?>
+                        <a href="participants.php?page=<?= $i ?>&search=<?= urlencode($search) ?>&branch=<?= urlencode($branchFilter) ?>"><?= $i ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+                
+                <?php if ($page < $totalPages): ?>
+                    <a href="participants.php?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>&branch=<?= urlencode($branchFilter) ?>">Next &raquo;</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Modal Dialog for Manual Add / Edit Participant -->
