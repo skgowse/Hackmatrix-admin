@@ -57,85 +57,108 @@ class CertificateGenerator {
             $pdf->Image($templatePath, 0, 0, $pageWidth, $pageHeight, '', '', '', false, 300, '', false, false, 0);
         }
         
-        // 2. Overlay fields
+        // 2. Setup layout variables by reading fields configuration
+        $nameField = null;
+        $branchField = null;
+        $certField = null;
+        
         foreach ($fields as $field) {
-            $fieldName = $field['field_name'];
-            
-            // Calculate absolute mm positions from percentages
-            $x_mm = ($field['x_position'] / 100) * $pageWidth;
-            $y_mm = ($field['y_position'] / 100) * $pageHeight;
-            
-            $fontName = $field['font_name'];
-            $fontSize = intval($field['font_size']);
-            $fontStyle = $field['font_style'];
-            $colorHex = $field['text_color'];
-            $alignment = $field['alignment']; // 'L', 'C', 'R'
-            
-            list($r, $g, $b) = sscanf($colorHex, "#%02x%02x%02x");
-            
-            if ($fieldName === 'participant_name') {
-                $text = $participant['participant_name'];
-                
-                // 1. Draw "This certificate is proudly presented to" above the name
-                $pdf->SetFont($fontName, '', 14);
-                $pdf->SetTextColor(75, 85, 99); // Gray #4b5563
-                $pdf->SetXY(0, $y_mm - 12);
-                $pdf->Cell($pageWidth, 6, "This certificate is proudly presented to", 0, 0, 'C');
-                
-                // 2. Draw the candidate name
-                $pdf->SetFont($fontName, $fontStyle, $fontSize);
-                $pdf->SetTextColor($r, $g, $b);
-                $cellHeight = $fontSize * 0.45;
-                $pdf->SetXY(0, $y_mm - ($cellHeight / 2));
-                $pdf->Cell($pageWidth, $cellHeight, $text, 0, 0, 'C');
-                
-            } elseif ($fieldName === 'branch') {
-                $text = $participant['branch'];
-                
-                // 1. Draw "of" above the branch
-                $pdf->SetFont($fontName, '', 14);
-                $pdf->SetTextColor(75, 85, 99); // Gray #4b5563
-                $pdf->SetXY(0, $y_mm - 9);
-                $pdf->Cell($pageWidth, 5, "of", 0, 0, 'C');
-                
-                // 2. Draw the branch name
-                $pdf->SetFont($fontName, $fontStyle, $fontSize);
-                $pdf->SetTextColor($r, $g, $b);
-                $cellHeight = $fontSize * 0.45;
-                $pdf->SetXY(0, $y_mm - ($cellHeight / 2));
-                $pdf->Cell($pageWidth, $cellHeight, $text, 0, 0, 'C');
-                
-                // 3. Draw description paragraph below the branch
-                $pdf->SetFont($fontName, '', 12);
-                $pdf->SetTextColor(75, 85, 99); // Gray #4b5563
-                
-                $descText = "for successfully participating in HackMatrix 1.0, a 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.";
-                
-                // Draw a wrapped paragraph centered on the page. We use MultiCell for word wrap.
-                // Width = 200mm, left offset = ($pageWidth - 200)/2 = 48.5mm
-                $pdf->SetXY(48.5, $y_mm + ($cellHeight / 2) + 6);
-                $pdf->MultiCell(200, 6, $descText, 0, 'C', false);
-                
-            } elseif ($fieldName === 'certificate_id') {
-                $text = "Certificate ID: " . $participant['certificate_id'];
-                
-                $pdf->SetFont($fontName, $fontStyle, $fontSize);
-                $pdf->SetTextColor($r, $g, $b);
-                $cellHeight = $fontSize * 0.45;
-                $adjusted_y = $y_mm - ($cellHeight / 2);
-                
-                if ($alignment === 'C') {
-                    $pdf->SetXY(0, $adjusted_y);
-                    $pdf->Cell($pageWidth, $cellHeight, $text, 0, 0, 'C');
-                } elseif ($alignment === 'R') {
-                    $pdf->SetXY(0, $adjusted_y);
-                    $pdf->Cell($x_mm, $cellHeight, $text, 0, 0, 'R');
-                } else {
-                    $pdf->SetXY($x_mm, $adjusted_y);
-                    $pdf->Cell(0, $cellHeight, $text, 0, 0, 'L');
-                }
+            if ($field['field_name'] === 'participant_name') {
+                $nameField = $field;
+            } elseif ($field['field_name'] === 'branch') {
+                $branchField = $field;
+            } elseif ($field['field_name'] === 'certificate_id') {
+                $certField = $field;
             }
         }
+        
+        // Base vertical anchor (default to 53% if name field settings are missing)
+        $base_y = 111.3;
+        $nameFont = 'helvetica';
+        $nameStyle = 'B';
+        $nameSize = 28;
+        $nameColor = '#1e3a8a';
+        
+        if ($nameField) {
+            $base_y = ($nameField['y_position'] / 100) * $pageHeight;
+            $nameFont = $nameField['font_name'];
+            $nameStyle = $nameField['font_style'];
+            $nameSize = intval($nameField['font_size']);
+            $nameColor = $nameField['text_color'];
+        }
+        list($nr, $ng, $nb) = sscanf($nameColor, "#%02x%02x%02x");
+        
+        $branchFont = 'helvetica';
+        $branchStyle = 'B';
+        $branchSize = 16;
+        $branchColor = '#1e3a8a';
+        if ($branchField) {
+            $branchFont = $branchField['font_name'];
+            $branchStyle = $branchField['font_style'];
+            $branchSize = intval($branchField['font_size']);
+            $branchColor = $branchField['text_color'];
+        }
+        list($br, $bg, $bb) = sscanf($branchColor, "#%02x%02x%02x");
+        
+        $certColor = '#1e3a8a';
+        if ($certField) {
+            $certColor = $certField['text_color'];
+        }
+        list($cr, $cg, $cb) = sscanf($certColor, "#%02x%02x%02x");
+
+        // Format name to professional Title Case if lowercase/uppercase
+        $nameText = trim($participant['participant_name']);
+        if (strtolower($nameText) === $nameText || strtoupper($nameText) === $nameText) {
+            $nameText = ucwords(strtolower($nameText));
+        }
+        
+        // Format branch to professional representation
+        $branchText = trim($participant['branch']);
+        if (strlen($branchText) <= 5) {
+            $branchText = strtoupper($branchText);
+        } elseif (strtolower($branchText) === $branchText || strtoupper($branchText) === $branchText) {
+            $branchText = ucwords(strtolower($branchText));
+        }
+
+        // 1. Draw "This certificate is proudly presented to"
+        $pdf->SetFont('helvetica', 'I', 12);
+        $pdf->SetTextColor(75, 85, 99);
+        $pdf->SetXY(0, $base_y - 14);
+        $pdf->Cell($pageWidth, 6, "This certificate is proudly presented to", 0, 0, 'C');
+
+        // 2. Draw Candidate Name
+        $pdf->SetFont($nameFont, $nameStyle, $nameSize);
+        $pdf->SetTextColor($nr, $ng, $nb);
+        $cellHeight = $nameSize * 0.45;
+        $pdf->SetXY(0, $base_y - ($cellHeight / 2));
+        $pdf->Cell($pageWidth, $cellHeight, $nameText, 0, 0, 'C');
+
+        // 3. Draw "of"
+        $pdf->SetFont('helvetica', 'I', 12);
+        $pdf->SetTextColor(75, 85, 99);
+        $pdf->SetXY(0, $base_y + ($cellHeight / 2) + 2);
+        $pdf->Cell($pageWidth, 5, "of", 0, 0, 'C');
+
+        // 4. Draw Branch / Department
+        $pdf->SetFont($branchFont, $branchStyle, $branchSize);
+        $pdf->SetTextColor($br, $bg, $bb);
+        $branchCellHeight = $branchSize * 0.45;
+        $pdf->SetXY(0, $base_y + ($cellHeight / 2) + 8);
+        $pdf->Cell($pageWidth, $branchCellHeight, $branchText, 0, 0, 'C');
+
+        // 5. Draw Description Paragraph
+        $pdf->SetFont('helvetica', '', 11.5);
+        $pdf->SetTextColor(55, 65, 81);
+        $descText = "for successfully participating in HackMatrix 1.0, a 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.";
+        $desc_y = $base_y + ($cellHeight / 2) + 8 + $branchCellHeight + 5;
+        $pdf->SetXY(($pageWidth - 210) / 2, $desc_y);
+        $pdf->MultiCell(210, 5.5, $descText, 0, 'C', false);
+
+        // 6. Draw Certificate ID
+        $pdf->SetFont('helvetica', 'B', 10.5);
+        $pdf->SetTextColor($cr, $cg, $cb);
+        $pdf->SetXY(0, $desc_y + 16);
+        $pdf->Cell($pageWidth, 5, "Certificate ID: " . $participant['certificate_id'], 0, 0, 'C');
         
         // 3. Output PDF file
         if ($outputPath !== null) {
