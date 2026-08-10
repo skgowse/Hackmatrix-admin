@@ -3,7 +3,11 @@
  * HackMatrix 1.0 - Visual Certificate Field Editor
  */
 
-require_once __DIR__ . '/header.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Enforce login
+requireLogin();
 
 $pdo = getDBConnection();
 $error = '';
@@ -17,7 +21,7 @@ if (!$template) {
     exit();
 }
 
-// Handle AJAX Save Coordinates
+// Handle AJAX Save Coordinates (MUST be processed before header.php prints any HTML)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_coordinates'])) {
     $csrfToken = $_POST['csrf_token'] ?? '';
     
@@ -68,6 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_coordinates'])) 
         jsonResponse(false, 'Database error: ' . $e->getMessage());
     }
 }
+
+require_once __DIR__ . '/header.php';
 
 // Load existing fields configuration
 $stmtFields = $pdo->prepare("SELECT * FROM certificate_fields WHERE template_id = ?");
