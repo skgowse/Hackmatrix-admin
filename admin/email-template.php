@@ -141,9 +141,24 @@ if ($emailTemplate) {
                     </div>
                 </div>
                 
-                <!-- Email body content -->
-                <div style="padding: 24px 20px; min-height: 240px; white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: #d1d5db; font-family: inherit;">
-                    <?= e($previewBody) ?>
+                <!-- Email body content (HTML visual mockup) -->
+                <div style="background: #f3f4f6; padding: 30px 15px; display: flex; justify-content: center;">
+                    <div style="width: 100%; max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                        <!-- Header Banner -->
+                        <?php if (file_exists(__DIR__ . '/../assets/images/email_header.png')): ?>
+                            <img src="../assets/images/email_header.png?t=<?= time() ?>" alt="College Header" style="width: 100%; max-width: 600px; height: auto; display: block; border-bottom: 2px solid #3b82f6;">
+                        <?php endif; ?>
+                        
+                        <!-- Message Body -->
+                        <div style="padding: 40px 30px; color: #374151; font-size: 14px; line-height: 1.6; text-align: left; white-space: pre-wrap; font-family: 'Segoe UI', Helvetica, Arial, sans-serif;">
+                            <?= e($previewBody) ?>
+                        </div>
+                        
+                        <!-- Footer bar -->
+                        <div style="padding: 20px 30px; background-color: #f9fafb; border-top: 1px solid #f3f4f6; color: #9ca3af; font-size: 11px; text-align: center; font-family: sans-serif;">
+                            &copy; <?= date('Y') ?> HackMatrix. All rights reserved.
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Attachment panel visual -->
