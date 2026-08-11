@@ -176,13 +176,9 @@ foreach ($fieldsList as $f) {
             <div id="renderTarget" style="display: block; pointer-events: none;"></div>
             
             <!-- Draggable Fields Overlays -->
-            <div id="presented_to_helper" class="editor-helper-text" style="color: #4b5563; font-style: italic; font-family: Helvetica, sans-serif; pointer-events: none; position: absolute; transform: translate(-50%, -50%); white-space: nowrap; text-align: center; font-size: 12px; opacity: 0.85;">This certificate is proudly presented to</div>
             <div id="participant_name_drag" class="draggable-field" data-field="participant_name">Rahul Kumar</div>
             
-            <div id="of_helper" class="editor-helper-text" style="color: #4b5563; font-style: italic; font-family: Helvetica, sans-serif; pointer-events: none; position: absolute; transform: translate(-50%, -50%); white-space: nowrap; text-align: center; font-size: 12px; opacity: 0.85;">of</div>
             <div id="branch_drag" class="draggable-field" data-field="branch">Artificial Intelligence & Data Science</div>
-            
-            <div id="desc_helper" class="editor-helper-text" style="color: #374151; font-family: Helvetica, sans-serif; pointer-events: none; position: absolute; transform: translate(-50%, 0); text-align: center; line-height: 1.4; opacity: 0.9;">for successfully participating in HackMatrix 1.0, a 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.</div>
         </div>
     </div>
 </div>
@@ -281,38 +277,7 @@ foreach ($fieldsList as $f) {
     }
 
     function updateHelperPositions() {
-        const nameEl = document.getElementById('participant_name_drag');
-        const branchEl = document.getElementById('branch_drag');
-        
-        const presentedHelper = document.getElementById('presented_to_helper');
-        const ofHelper = document.getElementById('of_helper');
-        const descHelper = document.getElementById('desc_helper');
-        
-        // Scale factor: A4 landscape height is 595.27pt.
-        const ptToPx = containerHeight / 595.27;
-        
-        if (nameEl) {
-            const namePctY = parseFloat(nameEl.style.top) || 53;
-            const namePctX = parseFloat(nameEl.style.left) || 50;
-            
-            presentedHelper.style.left = namePctX + '%';
-            presentedHelper.style.top = `calc(${namePctY}% - ${39.6 * ptToPx}px)`;
-            
-            ofHelper.style.left = namePctX + '%';
-            ofHelper.style.top = `calc(${namePctY}% + ${21.2 * ptToPx}px)`;
-        }
-        
-        if (branchEl) {
-            const branchPctY = parseFloat(branchEl.style.top) || 64;
-            const branchPctX = parseFloat(branchEl.style.left) || 50;
-            
-            descHelper.style.left = branchPctX + '%';
-            descHelper.style.top = `calc(${branchPctY}% + ${38.2 * ptToPx}px)`;
-            descHelper.style.width = (containerWidth * 0.7) + 'px';
-            
-            const scaledDescSize = Math.max(9, Math.round(11.5 * (containerWidth / 842)));
-            descHelper.style.fontSize = scaledDescSize + 'px';
-        }
+        // Helpers removed
     }
 
     function initializeWorkspace() {

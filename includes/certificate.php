@@ -79,6 +79,7 @@ class CertificateGenerator {
         $nameStyle = 'B';
         $nameSize = 28;
         $nameColor = '#1e3a8a';
+        $nameAlign = 'C';
         
         if ($nameField) {
             $name_x = ($nameField['x_position'] / 100) * $pageWidth;
@@ -87,6 +88,7 @@ class CertificateGenerator {
             $nameStyle = $nameField['font_style'];
             $nameSize = intval($nameField['font_size']);
             $nameColor = $nameField['text_color'];
+            $nameAlign = $nameField['alignment'] ?: 'C';
         }
         list($nr, $ng, $nb) = sscanf($nameColor, "#%02x%02x%02x");
         
@@ -96,6 +98,7 @@ class CertificateGenerator {
         $branchStyle = 'B';
         $branchSize = 16;
         $branchColor = '#1e3a8a';
+        $branchAlign = 'C';
         
         if ($branchField) {
             $branch_x = ($branchField['x_position'] / 100) * $pageWidth;
@@ -104,6 +107,7 @@ class CertificateGenerator {
             $branchStyle = $branchField['font_style'];
             $branchSize = intval($branchField['font_size']);
             $branchColor = $branchField['text_color'];
+            $branchAlign = $branchField['alignment'] ?: 'C';
         }
         list($br, $bg, $bb) = sscanf($branchColor, "#%02x%02x%02x");
         
@@ -140,40 +144,35 @@ class CertificateGenerator {
             $branchText = ucwords(strtolower($branchText));
         }
 
-        // 1. Draw "This certificate is proudly presented to" (13mm above the name)
-        $pdf->SetFont('helvetica', 'I', 12);
-        $pdf->SetTextColor(75, 85, 99);
-        $pdf->SetXY(0, $name_y - 13);
-        $pdf->Cell($pageWidth, 6, "This certificate is proudly presented to", 0, 0, 'C');
-
-        // 2. Draw Candidate Name
+        // 1. Draw Candidate Name
         $pdf->SetFont($nameFont, $nameStyle, $nameSize);
         $pdf->SetTextColor($nr, $ng, $nb);
         $cellHeight = $nameSize * 0.45;
-        $pdf->SetXY(0, $name_y - ($cellHeight / 2));
-        $pdf->Cell($pageWidth, $cellHeight, $nameText, 0, 0, 'C');
+        if ($nameAlign === 'C') {
+            $pdf->SetXY(0, $name_y - ($cellHeight / 2));
+            $pdf->Cell($pageWidth, $cellHeight, $nameText, 0, 0, 'C');
+        } elseif ($nameAlign === 'R') {
+            $pdf->SetXY(0, $name_y - ($cellHeight / 2));
+            $pdf->Cell($name_x, $cellHeight, $nameText, 0, 0, 'R');
+        } else {
+            $pdf->SetXY($name_x, $name_y - ($cellHeight / 2));
+            $pdf->Cell(0, $cellHeight, $nameText, 0, 0, 'L');
+        }
 
-        // 3. Draw "of" (perfectly centered between Name and Branch Y positions)
-        $pdf->SetFont('helvetica', 'I', 12);
-        $pdf->SetTextColor(75, 85, 99);
-        $of_y = ($name_y + $branch_y) / 2 - 2.5;
-        $pdf->SetXY(0, $of_y);
-        $pdf->Cell($pageWidth, 5, "of", 0, 0, 'C');
-
-        // 4. Draw Branch / Department
+        // 2. Draw Branch / Department
         $pdf->SetFont($branchFont, $branchStyle, $branchSize);
         $pdf->SetTextColor($br, $bg, $bb);
         $branchCellHeight = $branchSize * 0.45;
-        $pdf->SetXY(0, $branch_y - ($branchCellHeight / 2));
-        $pdf->Cell($pageWidth, $branchCellHeight, $branchText, 0, 0, 'C');
-
-        // 5. Draw Description Paragraph
-        $pdf->SetFont('helvetica', '', 11.5);
-        $pdf->SetTextColor(55, 65, 81);
-        $descText = "for successfully participating in HackMatrix 1.0, a 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.";
-        $desc_y = $branch_y + ($branchCellHeight / 2) + 5;
-        $pdf->SetXY(($pageWidth - 210) / 2, $desc_y);
-        $pdf->MultiCell(210, 5.5, $descText, 0, 'C', false);
+        if ($branchAlign === 'C') {
+            $pdf->SetXY(0, $branch_y - ($branchCellHeight / 2));
+            $pdf->Cell($pageWidth, $branchCellHeight, $branchText, 0, 0, 'C');
+        } elseif ($branchAlign === 'R') {
+            $pdf->SetXY(0, $branch_y - ($branchCellHeight / 2));
+            $pdf->Cell($branch_x, $branchCellHeight, $branchText, 0, 0, 'R');
+        } else {
+            $pdf->SetXY($branch_x, $branch_y - ($branchCellHeight / 2));
+            $pdf->Cell(0, $branchCellHeight, $branchText, 0, 0, 'L');
+        }
 
 
         
