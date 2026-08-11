@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = currentData[i] || { name: '', email: '', mobile: '', branch: '', year: '' };
+            const saved = currentData[i] || { name: '', email: '', mobile: '+91', branch: '', year: '' };
             
             // Build card container
             const card = document.createElement('div');
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="form-group">
                     <label>Mobile Number <span class="required">*</span></label>
-                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="10-digit mobile number" required value="${saved.mobile}" pattern="[0-9]{10}">
+                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="+91 XXXXXXXXXX" required value="${saved.mobile || '+91'}" pattern="\\+91[0-9]{10}">
                     <div class="validation-message member-mobile-msg"></div>
                 </div>
 
@@ -195,11 +195,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }));
 
         mobileInput.addEventListener('input', debounce(function() {
-            let mobile = this.value.replace(/[^0-9]/g, '');
-            if (mobile.length > 10) {
-                mobile = mobile.substr(-10);
+            let val = this.value;
+            if (!val.startsWith('+91')) {
+                val = '+91' + val.replace(/\+91/g, '').replace(/[^0-9]/g, '');
+            } else {
+                let rest = val.substring(3).replace(/[^0-9]/g, '');
+                if (rest.length > 10) rest = rest.substring(0, 10);
+                val = '+91' + rest;
             }
-            this.value = mobile;
+            this.value = val;
+
+            let mobile = val.substring(3);
 
             if (mobile === '') {
                 mobileMsg.innerText = '';
@@ -209,14 +215,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (mobile.length !== 10) {
                 mobileMsg.className = 'validation-message invalid';
-                mobileMsg.innerText = 'Must be exactly 10 digits.';
+                mobileMsg.innerText = 'Must be exactly 10 digits after +91.';
                 validationStates.mobiles[index] = false;
                 return;
             }
 
             // Check form duplicates
             const allMobiles = Array.from(document.querySelectorAll('.member-mobile'))
-                                     .map(el => el.value.replace(/[^0-9]/g, ''))
+                                     .map(el => el.value.replace(/[^0-9]/g, '').slice(-10))
                                      .filter(val => val !== '');
             if (allMobiles.filter(val => val === mobile).length > 1) {
                 mobileMsg.className = 'validation-message invalid';

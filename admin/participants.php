@@ -337,8 +337,11 @@ require_once __DIR__ . '/header.php';
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '', branch: '', year: '' };
+            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '+91', branch: '', year: '' };
             const disabled = activeMode === 'view' ? 'disabled' : '';
+            
+            // Format phone number with +91
+            let mobVal = saved.mobile ? (saved.mobile.startsWith('+91') ? saved.mobile : '+91' + saved.mobile) : '+91';
             
             const card = document.createElement('div');
             card.style.background = 'rgba(255,255,255,0.02)';
@@ -378,7 +381,7 @@ require_once __DIR__ . '/header.php';
                     </div>
                     <div class="form-group">
                         <label style="font-size:10px;">Mobile Number</label>
-                        <input type="text" name="members[${index}][mobile]" class="form-control" required value="${e(saved.mobile)}" ${disabled} pattern="[0-9]{10}">
+                        <input type="text" name="members[${index}][mobile]" class="form-control member-mobile" required value="${mobVal}" ${disabled} pattern="\\+91[0-9]{10}">
                     </div>
                     <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <div>
@@ -399,6 +402,21 @@ require_once __DIR__ . '/header.php';
             
             membersContainer.appendChild(card);
         }
+        
+        // Setup input helper for +91 country prefix
+        membersContainer.querySelectorAll('.member-mobile').forEach(input => {
+            input.addEventListener('input', function() {
+                let val = this.value;
+                if (!val.startsWith('+91')) {
+                    val = '+91' + val.replace(/\+91/g, '').replace(/[^0-9]/g, '');
+                } else {
+                    let rest = val.substring(3).replace(/[^0-9]/g, '');
+                    if (rest.length > 10) rest = rest.substring(0, 10);
+                    val = '+91' + rest;
+                }
+                this.value = val;
+            });
+        });
     }
     
     // Bind change listener to the team size selector inside modal
