@@ -285,16 +285,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add_participant']) |
     if (!validateCSRFToken($csrfToken)) {
         $error = 'Invalid security token (CSRF failure).';
     } else {
-        $teamNo = trim($_POST['team_no'] ?? '');
-        $teamName = trim($_POST['team_name'] ?? '');
         $partName = trim($_POST['participant_name'] ?? '');
         $branch = trim($_POST['branch'] ?? '');
         $email = trim($_POST['email'] ?? '');
-        $certId = trim($_POST['certificate_id'] ?? '');
         $isEdit = isset($_POST['edit_participant']);
         $participantId = intval($_POST['participant_id'] ?? 0);
         
-        if (empty($teamNo) || empty($teamName) || empty($partName) || empty($branch) || empty($email) || empty($certId)) {
+        if (empty($partName) || empty($branch) || empty($email)) {
             $error = 'All fields are required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Invalid email address format.';
@@ -307,36 +304,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add_participant']) |
                 $stmt->execute($dupEmailParams);
                 $emailDup = $stmt->fetchColumn() > 0;
                 
-                // Check duplicate Certificate ID
-                $dupCertQuery = $isEdit ? "SELECT COUNT(*) FROM participants WHERE certificate_id = ? AND id != ?" : "SELECT COUNT(*) FROM participants WHERE certificate_id = ?";
-                $dupCertParams = $isEdit ? [$certId, $participantId] : [$certId];
-                $stmt2 = $pdo->prepare($dupCertQuery);
-                $stmt2->execute($dupCertParams);
-                $certDup = $stmt2->fetchColumn() > 0;
-                
                 if ($emailDup) {
                     $error = 'The email address is already in use by another participant.';
-                } elseif ($certDup) {
-                    $error = 'The certificate ID is already in use by another participant.';
                 } else {
                     if ($isEdit) {
                         $pdo->beginTransaction();
-                        // Update participant
-                        $stmt = $pdo->prepare("UPDATE participants SET team_no = ?, team_name = ?, participant_name = ?, branch = ?, email = ?, certificate_id = ? WHERE id = ?");
-                        $stmt->execute([$teamNo, $teamName, $partName, $branch, $email, $certId, $participantId]);
+                        // Update participant (only name, branch, and email)
+                        $stmt = $pdo->prepare("UPDATE participants SET participant_name = ?, branch = ?, email = ? WHERE id = ?");
+                        $stmt->execute([$partName, $branch, $email, $participantId]);
                         
-                        // Update linked certificate/email structures if certificate_id or email changed
-                        $stmt = $pdo->prepare("UPDATE certificates SET certificate_id = ? WHERE participant_id = ?");
-                        $stmt->execute([$certId, $participantId]);
-                        
-                        $stmt = $pdo->prepare("UPDATE email_logs SET certificate_id = ?, email = ? WHERE participant_id = ?");
-                        $stmt->execute([$certId, $email, $participantId]);
+                        // Update email_logs structures if email changed
+                        $stmt = $pdo->prepare("UPDATE email_logs SET email = ? WHERE participant_id = ?");
+                        $stmt->execute([$email, $participantId]);
                         
                         $pdo->commit();
                         $successMsg = 'Participant details updated successfully.';
                         logActivity('PARTICIPANT_ADDED', "Updated participant ID $participantId ($partName)");
                     } else {
                         $pdo->beginTransaction();
+                        // Auto-generate certificate_id, team_no, team_name
+                        $nextId = $pdo->query("SELECT IFNULL(MAX(id), 0) + 1 FROM participants")->fetchColumn();
+                        $certId = sprintf("HM26-%04d", $nextId);
+                        $teamNo = "HM-IND-" . $nextId;
+                        $teamName = "Individual";
+                        
                         // Insert new participant
                         $stmt = $pdo->prepare("INSERT INTO participants (team_no, team_name, participant_name, branch, email, certificate_id) VALUES (?, ?, ?, ?, ?, ?)");
                         $stmt->execute([$teamNo, $teamName, $partName, $branch, $email, $certId]);
@@ -646,21 +637,7 @@ $participants = $stmt->fetchAll();
                 <input type="text" id="modal_branch" name="branch" class="form-control" required placeholder="e.g. AI & DS">
             </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="modal_team_name">TEAM NAME</label>
-                    <input type="text" id="modal_team_name" name="team_name" class="form-control" required placeholder="e.g. Team Alpha">
-                </div>
-                <div class="form-group">
-                    <label for="modal_team_no">TEAM NO</label>
-                    <input type="text" id="modal_team_no" name="team_no" class="form-control" required placeholder="e.g. HM001">
-                </div>
-            </div>
 
-            <div class="form-group">
-                <label for="modal_cert_id">CERTIFICATE ID</label>
-                <input type="text" id="modal_cert_id" name="certificate_id" class="form-control" required placeholder="e.g. HM26-001">
-            </div>
             
             <div class="btn-group" style="margin-top: 24px; justify-content: flex-end;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -683,9 +660,6 @@ $participants = $stmt->fetchAll();
         document.getElementById('modal_part_name').value = '';
         document.getElementById('modal_email').value = '';
         document.getElementById('modal_branch').value = '';
-        document.getElementById('modal_team_name').value = '';
-        document.getElementById('modal_team_no').value = '';
-        document.getElementById('modal_cert_id').value = '';
         
         modal.classList.add('active');
     }
@@ -700,9 +674,6 @@ $participants = $stmt->fetchAll();
         document.getElementById('modal_part_name').value = participant.participant_name;
         document.getElementById('modal_email').value = participant.email;
         document.getElementById('modal_branch').value = participant.branch;
-        document.getElementById('modal_team_name').value = participant.team_name;
-        document.getElementById('modal_team_no').value = participant.team_no;
-        document.getElementById('modal_cert_id').value = participant.certificate_id;
         
         modal.classList.add('active');
     }
