@@ -1,0 +1,256 @@
+<?php
+/**
+ * HackMatrix 1.0 - Admin API: Update Team & Members
+ */
+
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
+
+if (!isLoggedIn()) {
+    jsonResponse(false, 'Unauthorized access.');
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonResponse(false, 'Only POST requests are allowed.');
+}
+
+$pdo = getDBConnection();
+
+// 1. CSRF Verification
+$csrfToken = $_POST['csrf_token'] ?? '';
+if (!validateCSRFToken($csrfToken)) {
+    jsonResponse(false, 'Invalid security token (CSRF failure).');
+}
+
+$teamDbId = intval($_POST['team_db_id'] ?? 0);
+if ($teamDbId <= 0) {
+    jsonResponse(false, 'Invalid team record identifier.');
+}
+
+// 2. Extract and Sanitize Inputs
+$teamName = trim($_POST['team_name'] ?? '');
+$college = trim($_POST['college'] ?? '');
+$teamSize = intval($_POST['team_size'] ?? 0);
+$domain = trim($_POST['domain'] ?? '');
+$projectTitle = trim($_POST['project_title'] ?? '');
+$status = trim($_POST['status'] ?? 'ACTIVE');
+$members = $_POST['members'] ?? [];
+
+$allowedDomains = ['AI & ML', 'Cloud Computing', 'Cybersecurity', 'Robotics'];
+$allowedYears = ['1', '2', '3', '4'];
+
+if (empty($teamName) || empty($college) || empty($projectTitle) || empty($domain)) {
+    jsonResponse(false, 'All team profile fields are required.');
+}
+
+if (!in_array($teamSize, [2, 3, 4])) {
+    jsonResponse(false, 'Team size must be 2, 3, or 4.');
+}
+
+if (!in_array($domain, $allowedDomains)) {
+    jsonResponse(false, 'Selected domain is invalid.');
+}
+
+if (count($members) !== $teamSize) {
+    jsonResponse(false, 'The number of submitted members must match the team size.');
+}
+
+// 3. Validate Each Member and Check Internal Duplicates
+$emailsForm = [];
+$mobilesForm = [];
+
+foreach ($members as $index => $m) {
+    $mId = intval($m['id'] ?? 0);
+    $name = trim($m['name'] ?? '');
+    $email = strtolower(trim($m['email'] ?? ''));
+    $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
+    $branch = trim($m['branch'] ?? '');
+    $year = trim($m['year'] ?? '');
+    
+    $num = $index + 1;
+    $roleName = ($index === 0) ? 'Team Lead' : 'Member';
+    
+    if (empty($name) || empty($email) || empty($mobile) || empty($branch) || empty($year)) {
+        jsonResponse(false, "All fields are required for Member $num ($roleName).");
+    }
+    
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        jsonResponse(false, "Invalid email format for Member $num ($roleName).");
+    }
+    
+    if (strlen($mobile) > 10) {
+        $mobile = substr($mobile, -10);
+    }
+    if (strlen($mobile) !== 10) {
+        jsonResponse(false, "Mobile number must be exactly 10 digits for Member $num.");
+    }
+    
+    if (in_array($email, $emailsForm)) {
+        jsonResponse(false, "Duplicate email address '$email' found within this team.");
+    }
+    $emailsForm[] = $email;
+    
+    if (in_array($mobile, $mobilesForm)) {
+        jsonResponse(false, "Duplicate mobile number '$mobile' found within this team.");
+    }
+    $mobilesForm[] = $mobile;
+}
+
+try {
+    // 4. Verify Database Uniqueness Constraints
+    // Team name check
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM teams WHERE LOWER(team_name) = ? AND id != ?");
+    $stmt->execute([strtolower($teamName), $teamDbId]);
+    if ($stmt->fetchColumn() > 0) {
+        jsonResponse(false, "The team name '$teamName' is already registered by another team.");
+    }
+    
+    // Fetch current team code
+    $stmtTeam = $pdo->prepare("SELECT team_id FROM teams WHERE id = ?");
+    $stmtTeam->execute([$teamDbId]);
+    $teamCode = $stmtTeam->fetchColumn();
+    
+    if (!$teamCode) {
+        jsonResponse(false, 'Team record not found.');
+    }
+    
+    // Member checks
+    foreach ($members as $index => $m) {
+        $mId = intval($m['id'] ?? 0);
+        $email = strtolower(trim($m['email'] ?? ''));
+        $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
+        if (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+        
+        $num = $index + 1;
+        
+        // Check email database uniqueness (excluding the member being updated)
+        if ($mId > 0) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE LOWER(email) = ? AND id != ?");
+            $stmt->execute([$email, $mId]);
+        } else {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE LOWER(email) = ?");
+            $stmt->execute([$email]);
+        }
+        if ($stmt->fetchColumn() > 0) {
+            jsonResponse(false, "The email '$email' for Member $num is already registered by another participant.");
+        }
+        
+        // Check mobile database uniqueness
+        if ($mId > 0) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE mobile = ? AND id != ?");
+            $stmt->execute([$mobile, $mId]);
+        } else {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE mobile = ?");
+            $stmt->execute([$mobile]);
+        }
+        if ($stmt->fetchColumn() > 0) {
+            jsonResponse(false, "The mobile number '$mobile' for Member $num is already registered by another participant.");
+        }
+    }
+    
+    // 5. Update Database within Transaction
+    $pdo->beginTransaction();
+    
+    // Update Team profile
+    $stmt = $pdo->prepare("UPDATE teams SET team_name = ?, college = ?, team_size = ?, domain = ?, project_title = ?, status = ? WHERE id = ?");
+    $stmt->execute([
+        $teamName,
+        $college,
+        $teamSize,
+        $domain,
+        $projectTitle,
+        $status,
+        $teamDbId
+    ]);
+    
+    // Identify submitted member IDs to determine which ones to delete
+    $submittedMemberIds = [];
+    
+    // Process members (Insert or Update)
+    foreach ($members as $index => $m) {
+        $mId = intval($m['id'] ?? 0);
+        $name = trim($m['name'] ?? '');
+        $email = strtolower(trim($m['email'] ?? ''));
+        $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
+        if (strlen($mobile) > 10) {
+            $mobile = substr($mobile, -10);
+        }
+        $branch = trim($m['branch'] ?? '');
+        $year = trim($m['year'] ?? '');
+        $role = ($index === 0) ? 'Team Lead' : 'Member';
+        $memberCertId = $teamCode . "-" . ($index + 1);
+        
+        if ($mId > 0) {
+            // Update existing member
+            $stmt = $pdo->prepare("UPDATE team_members SET name = ?, email = ?, mobile = ?, branch = ?, year = ?, role = ?, certificate_id = ? WHERE id = ?");
+            $stmt->execute([
+                $name,
+                $email,
+                $mobile,
+                $branch,
+                $year,
+                $role,
+                $memberCertId,
+                $mId
+            ]);
+            
+            // Sync email logs if email changed
+            $stmtSync = $pdo->prepare("UPDATE email_logs SET email = ? WHERE participant_id = ?");
+            $stmtSync->execute([$email, $mId]);
+            
+            $submittedMemberIds[] = $mId;
+        } else {
+            // Insert new member (due to size increase)
+            $stmt = $pdo->prepare("INSERT INTO team_members (team_id, name, email, mobile, branch, year, role, certificate_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $teamDbId,
+                $name,
+                $email,
+                $mobile,
+                $branch,
+                $year,
+                $role,
+                $memberCertId
+            ]);
+            $newMemberId = $pdo->lastInsertId();
+            
+            // Add queue records
+            $stmtCert = $pdo->prepare("INSERT INTO certificates (participant_id, certificate_id, file_path, status) VALUES (?, ?, '', 'PENDING')");
+            $stmtCert->execute([$newMemberId, $memberCertId]);
+            
+            $stmtMail = $pdo->prepare("INSERT INTO email_logs (participant_id, certificate_id, email, status) VALUES (?, ?, ?, 'PENDING')");
+            $stmtMail->execute([$newMemberId, $memberCertId, $email]);
+            
+            $submittedMemberIds[] = $newMemberId;
+        }
+    }
+    
+    // Find database members NOT in the submission list and delete them (due to size decrease)
+    $stmt = $pdo->prepare("SELECT id FROM team_members WHERE team_id = ?");
+    $stmt->execute([$teamDbId]);
+    $dbMemberIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $membersToDelete = array_diff($dbMemberIds, $submittedMemberIds);
+    if (!empty($membersToDelete)) {
+        $deletePlaceholders = implode(',', array_fill(0, count($membersToDelete), '?'));
+        $stmtDel = $pdo->prepare("DELETE FROM team_members WHERE id IN ($deletePlaceholders)");
+        $stmtDel->execute(array_values($membersToDelete));
+    }
+    
+    // Log activity
+    $adminUser = $_SESSION['admin_username'] ?? 'admin';
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $stmtLog = $pdo->prepare("INSERT INTO activity_logs (admin_id, action, details, ip_address) VALUES (?, 'PARTICIPANT_UPDATED', ?, ?)");
+    $stmtLog->execute([$_SESSION['admin_id'] ?? null, "Updated team details for $teamName ($teamCode).", $ip]);
+    
+    $pdo->commit();
+    
+    jsonResponse(true, 'Team details updated successfully.');
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    jsonResponse(false, 'Transaction failed: ' . $e->getMessage());
+}

@@ -8,7 +8,8 @@ require_once __DIR__ . '/header.php';
 $pdo = getDBConnection();
 
 // Fetch summary metrics dynamically
-$totalParticipants = $pdo->query("SELECT COUNT(*) FROM participants")->fetchColumn();
+$totalTeams = $pdo->query("SELECT COUNT(*) FROM teams")->fetchColumn();
+$totalParticipants = $pdo->query("SELECT COUNT(*) FROM team_members")->fetchColumn();
 $totalCertificates = $pdo->query("SELECT COUNT(*) FROM certificates")->fetchColumn();
 
 $generatedCount = $pdo->query("SELECT COUNT(*) FROM certificates WHERE status = 'GENERATED'")->fetchColumn();
@@ -18,6 +19,17 @@ $notGeneratedCount = $totalParticipants - $generatedCount;
 $emailsSent = $pdo->query("SELECT COUNT(*) FROM email_logs WHERE status = 'SENT'")->fetchColumn();
 $emailsFailed = $pdo->query("SELECT COUNT(*) FROM email_logs WHERE status = 'FAILED'")->fetchColumn();
 $emailsPending = $pdo->query("SELECT COUNT(*) FROM email_logs WHERE status = 'PENDING'")->fetchColumn();
+
+// Teams by sizes
+$teamsOf2 = $pdo->query("SELECT COUNT(*) FROM teams WHERE team_size = 2")->fetchColumn();
+$teamsOf3 = $pdo->query("SELECT COUNT(*) FROM teams WHERE team_size = 3")->fetchColumn();
+$teamsOf4 = $pdo->query("SELECT COUNT(*) FROM teams WHERE team_size = 4")->fetchColumn();
+
+// Teams by domains
+$aimlTeams = $pdo->query("SELECT COUNT(*) FROM teams WHERE domain = 'AI & ML'")->fetchColumn();
+$cloudTeams = $pdo->query("SELECT COUNT(*) FROM teams WHERE domain = 'Cloud Computing'")->fetchColumn();
+$cyberTeams = $pdo->query("SELECT COUNT(*) FROM teams WHERE domain = 'Cybersecurity'")->fetchColumn();
+$roboticsTeams = $pdo->query("SELECT COUNT(*) FROM teams WHERE domain = 'Robotics'")->fetchColumn();
 
 // Fetch 5 most recent activity logs
 $recentActivities = $pdo->query("SELECT l.*, a.username FROM activity_logs l LEFT JOIN admins a ON l.admin_id = a.id ORDER BY l.id DESC LIMIT 5")->fetchAll();
@@ -40,6 +52,16 @@ $recentEmails = $pdo->query("SELECT e.*, p.participant_name FROM email_logs e JO
             <svg viewBox="0 0 24 24" width="24" height="24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
         </div>
         <div class="stat-card-info">
+            <div class="value"><?= $totalTeams ?></div>
+            <h3>Total Teams</h3>
+        </div>
+    </a>
+    
+    <a href="participants.php" class="stat-card" style="text-decoration: none;">
+        <div class="stat-card-icon green" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1);">
+            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="stat-card-info">
             <div class="value"><?= $totalParticipants ?></div>
             <h3>Total Participants</h3>
         </div>
@@ -54,19 +76,54 @@ $recentEmails = $pdo->query("SELECT e.*, p.participant_name FROM email_logs e JO
             <h3>Total Certificates</h3>
         </div>
     </a>
-    
-    <a href="certificates.php?status=GENERATED" class="stat-card" style="text-decoration: none;">
-        <div class="stat-card-icon green">
-            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
-        <div class="stat-card-info">
-            <div class="value"><?= $generatedCount ?></div>
-            <h3>Certificates Generated</h3>
-        </div>
-    </a>
 </div>
 
-<div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+<!-- Team Size & Domain Metrics cards -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Team Sizes Breakdown Card -->
+    <div class="card" style="padding: 24px; margin-bottom: 0;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px; color: white;">Team Size Breakdowns</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 10px 16px; border-radius: 8px;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">2-Member Teams:</span>
+                <span style="font-size: 14px; font-weight: 700; color: white;"><?= $teamsOf2 ?> Teams</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 10px 16px; border-radius: 8px;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">3-Member Teams:</span>
+                <span style="font-size: 14px; font-weight: 700; color: white;"><?= $teamsOf3 ?> Teams</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 10px 16px; border-radius: 8px;">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">4-Member Teams:</span>
+                <span style="font-size: 14px; font-weight: 700; color: white;"><?= $teamsOf4 ?> Teams</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain Registrations Breakdown Card -->
+    <div class="card" style="padding: 24px; margin-bottom: 0;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px; color: white;">Registrations by Domain</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 18px; font-weight: 800; color: #a5b4fc;"><?= $aimlTeams ?></div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600;">AI & ML</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 18px; font-weight: 800; color: #818cf8;"><?= $cloudTeams ?></div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600;">Cloud Computing</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 18px; font-weight: 800; color: #f472b6;"><?= $cyberTeams ?></div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600;">Cybersecurity</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 18px; font-weight: 800; color: #34d399;"><?= $roboticsTeams ?></div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 600;">Robotics</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
     <a href="logs.php?type=email&search=SENT" class="stat-card" style="text-decoration: none; background: rgba(16, 185, 129, 0.04);">
         <div class="stat-card-icon green" style="background: rgba(16, 185, 129, 0.08);">
             <svg viewBox="0 0 24 24" width="20" height="20"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>

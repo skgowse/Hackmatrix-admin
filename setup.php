@@ -38,19 +38,49 @@ if (isset($_POST['run_setup'])) {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
             
-            'participants' => "CREATE TABLE IF NOT EXISTS participants (
+            'teams' => "CREATE TABLE IF NOT EXISTS teams (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                team_no VARCHAR(50) NOT NULL,
-                team_name VARCHAR(100) NOT NULL,
-                participant_name VARCHAR(100) NOT NULL,
-                branch VARCHAR(100) NOT NULL,
+                team_id VARCHAR(50) UNIQUE NOT NULL,
+                team_name VARCHAR(100) UNIQUE NOT NULL,
+                college VARCHAR(255) NOT NULL,
+                team_size INT NOT NULL,
+                domain VARCHAR(100) NOT NULL,
+                project_title VARCHAR(255) NOT NULL,
+                status VARCHAR(50) DEFAULT 'ACTIVE',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+            
+            'team_members' => "CREATE TABLE IF NOT EXISTS team_members (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                team_id INT NOT NULL,
+                name VARCHAR(100) NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
+                mobile VARCHAR(20) NOT NULL,
+                branch VARCHAR(100) NOT NULL,
+                year VARCHAR(50) NOT NULL,
+                role VARCHAR(50) NOT NULL,
                 certificate_id VARCHAR(50) UNIQUE NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
                 INDEX idx_email (email),
                 INDEX idx_cert_id (certificate_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+            
+            'participants_view' => "CREATE OR REPLACE VIEW participants AS
+            SELECT 
+                tm.id AS id,
+                t.team_id AS team_no,
+                t.team_name AS team_name,
+                tm.name AS participant_name,
+                tm.branch AS branch,
+                tm.email AS email,
+                tm.certificate_id AS certificate_id,
+                tm.created_at AS created_at,
+                tm.updated_at AS updated_at
+            FROM team_members tm
+            JOIN teams t ON tm.team_id = t.id",
             
             'certificate_templates' => "CREATE TABLE IF NOT EXISTS certificate_templates (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -84,7 +114,7 @@ if (isset($_POST['run_setup'])) {
                 file_path VARCHAR(255) NOT NULL,
                 status ENUM('PENDING', 'GENERATED', 'FAILED') DEFAULT 'PENDING',
                 generated_at TIMESTAMP NULL DEFAULT NULL,
-                FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE
+                FOREIGN KEY (participant_id) REFERENCES team_members(id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
             
             'smtp_settings' => "CREATE TABLE IF NOT EXISTS smtp_settings (
@@ -116,7 +146,7 @@ if (isset($_POST['run_setup'])) {
                 sent_at TIMESTAMP NULL DEFAULT NULL,
                 error_message TEXT NULL,
                 retry_count INT DEFAULT 0,
-                FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE,
+                FOREIGN KEY (participant_id) REFERENCES team_members(id) ON DELETE CASCADE,
                 INDEX idx_status (status)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
             

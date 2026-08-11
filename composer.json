@@ -2,6 +2,7 @@
     "require": {
         "tecnickcom/tcpdf": "^6.11",
         "setasign/fpdi": "^2.6",
-        "phpmailer/phpmailer": "^7.1"
+        "phpmailer/phpmailer": "^7.1",
+        "phpoffice/phpspreadsheet": "^5.9"
     }
 }
