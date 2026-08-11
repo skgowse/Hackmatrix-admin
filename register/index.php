@@ -68,9 +68,10 @@ require_once __DIR__ . '/../includes/functions.php';
 
                     <div class="form-group">
                         <label for="team_size">TEAM SIZE (MEMBERS) <span class="required">*</span></label>
-                        <select id="team_size" name="team_size" class="form-control">
+                        <select id="team_size" name="team_size" class="form-control" required>
+                            <option value="">Select Team Size</option>
                             <option value="2">2 Members</option>
-                            <option value="3" selected>3 Members</option>
+                            <option value="3">3 Members</option>
                             <option value="4">4 Members</option>
                         </select>
                     </div>
@@ -79,7 +80,8 @@ require_once __DIR__ . '/../includes/functions.php';
                 <div style="margin-top: 20px;">
                     <div class="form-group" style="max-width: 500px;">
                         <label for="domain">HACKATHON DOMAIN <span class="required">*</span></label>
-                        <select id="domain" name="domain" class="form-control">
+                        <select id="domain" name="domain" class="form-control" required>
+                            <option value="">Select Hackathon Domain</option>
                             <option value="AI & ML">AI & ML (Artificial Intelligence & Machine Learning)</option>
                             <option value="Cloud Computing">Cloud Computing</option>
                             <option value="Cybersecurity">Cybersecurity</option>

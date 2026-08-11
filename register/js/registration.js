@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = currentData[i] || { name: '', email: '', mobile: '', branch: 'AIDS', year: '3' };
+            const saved = currentData[i] || { name: '', email: '', mobile: '', branch: '', year: '' };
             
             // Build card container
             const card = document.createElement('div');
@@ -83,13 +83,13 @@ document.addEventListener('DOMContentLoaded', function() {
             grid.className = 'form-grid-2';
             
             // Generate branch options
-            let branchOptions = '';
+            let branchOptions = '<option value="">Select Branch</option>';
             branches.forEach(b => {
                 branchOptions += `<option value="${b}" ${saved.branch === b ? 'selected' : ''}>${b}</option>`;
             });
 
             // Generate year options
-            let yearOptions = '';
+            let yearOptions = '<option value="">Select Academic Year</option>';
             years.forEach(y => {
                 yearOptions += `<option value="${y.val}" ${saved.year === y.val ? 'selected' : ''}>${y.label}</option>`;
             });
@@ -280,12 +280,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }));
 
+    function handleTeamSizeChange(value) {
+        const size = parseInt(value);
+        if (!isNaN(size) && size >= 2 && size <= 4) {
+            renderMemberCards(size);
+        } else {
+            membersContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: rgba(255,255,255,0.01); border: 1px dashed var(--border-color); border-radius: 12px; width: 100%;">
+                    Please select a team size to enter member details.
+                </div>
+            `;
+        }
+    }
+
     // Trigger initial render
-    renderMemberCards(parseInt(teamSizeSelect.value));
+    handleTeamSizeChange(teamSizeSelect.value);
 
     // Handle Team Size updates
     teamSizeSelect.addEventListener('change', function() {
-        renderMemberCards(parseInt(this.value));
+        handleTeamSizeChange(this.value);
     });
 
     // Form Submission Handler
@@ -294,6 +307,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 1. Double check client validation states
         const size = parseInt(teamSizeSelect.value);
+        if (isNaN(size) || size < 2 || size > 4) {
+            showToast('Please select a valid team size.', 'warning');
+            teamSizeSelect.focus();
+            return;
+        }
+
+        const collegeSelect = document.getElementById('college');
+        if (collegeSelect.value === '') {
+            showToast('Please select your College Name.', 'warning');
+            collegeSelect.focus();
+            return;
+        }
+
+        const domainSelect = document.getElementById('domain');
+        if (domainSelect.value === '') {
+            showToast('Please select a Hackathon Domain.', 'warning');
+            domainSelect.focus();
+            return;
+        }
         
         if (!validationStates.teamName) {
             showToast('Please choose a valid, unique team name.', 'warning');
@@ -302,6 +334,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         for (let i = 0; i < size; i++) {
+            const card = document.querySelector(`.member-card[data-index="${i}"]`);
+            if (card) {
+                const branchVal = card.querySelector('.member-branch').value;
+                if (branchVal === '') {
+                    showToast(`Please select a Branch for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-branch').focus();
+                    return;
+                }
+                const yearVal = card.querySelector('.member-year').value;
+                if (yearVal === '') {
+                    showToast(`Please select an Academic Year for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-year').focus();
+                    return;
+                }
+            }
+
             if (!validationStates.emails[i]) {
                 showToast(`Please verify the email address for Member #${i+1}.`, 'warning');
                 document.querySelector(`.member-card[data-index="${i}"] .member-email`).focus();

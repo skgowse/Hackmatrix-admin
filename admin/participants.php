@@ -267,7 +267,8 @@ require_once __DIR__ . '/header.php';
                 
                 <div class="form-group">
                     <label>Team Size</label>
-                    <select name="team_size" id="modal_team_size" class="form-control">
+                    <select name="team_size" id="modal_team_size" class="form-control" required>
+                        <option value="">Select Team Size</option>
                         <option value="2">2 Members</option>
                         <option value="3">3 Members</option>
                         <option value="4">4 Members</option>
@@ -276,7 +277,8 @@ require_once __DIR__ . '/header.php';
                 
                 <div class="form-group">
                     <label>Domain</label>
-                    <select name="domain" id="modal_domain" class="form-control">
+                    <select name="domain" id="modal_domain" class="form-control" required>
+                        <option value="">Select Domain</option>
                         <option value="AI & ML">AI & ML</option>
                         <option value="Cloud Computing">Cloud Computing</option>
                         <option value="Cybersecurity">Cybersecurity</option>
@@ -335,7 +337,7 @@ require_once __DIR__ . '/header.php';
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '', branch: 'AIDS', year: '3' };
+            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '', branch: '', year: '' };
             const disabled = activeMode === 'view' ? 'disabled' : '';
             
             const card = document.createElement('div');
@@ -349,12 +351,12 @@ require_once __DIR__ . '/header.php';
             // Hidden member ID
             let idField = saved.id ? `<input type="hidden" name="members[${index}][id]" value="${saved.id}">` : '';
             
-            let branchOptions = '';
+            let branchOptions = '<option value="">Select Branch</option>';
             branches.forEach(b => {
                 branchOptions += `<option value="${b}" ${saved.branch === b ? 'selected' : ''}>${b}</option>`;
             });
 
-            let yearOptions = '';
+            let yearOptions = '<option value="">Select Year</option>';
             years.forEach(y => {
                 yearOptions += `<option value="${y}" ${saved.year === y ? 'selected' : ''}>${y} Year</option>`;
             });
