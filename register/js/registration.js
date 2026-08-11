@@ -1,6 +1,36 @@
+import * as z from 'https://cdn.jsdelivr.net/npm/zod@3.22.4/+esm';
+
 /**
  * HackMatrix 1.0 - Dynamic Registration Controller
  */
+
+// Define Zod Validation Schemas
+const MemberSchema = z.object({
+    salutation: z.enum(['Mr.', 'Miss.', 'Mrs.', 'Ms.'], {
+        errorMap: () => ({ message: 'Please select a valid Salutation.' })
+    }),
+    name: z.string().min(3, 'Full Name must be at least 3 characters.').max(100, 'Full Name is too long.'),
+    email: z.string().email('Invalid email address format.'),
+    mobile: z.string().regex(/^\+91[0-9]{10}$/, 'Mobile number must be +91 followed by exactly 10 digits.'),
+    branch: z.enum(['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'], {
+        errorMap: () => ({ message: 'Please select a valid Branch.' })
+    }),
+    year: z.enum(['1', '2', '3', '4'], {
+        errorMap: () => ({ message: 'Please select a valid Academic Year.' })
+    })
+});
+
+const RegistrationSchema = z.object({
+    teamName: z.string().min(3, 'Team Name must be at least 3 characters.').max(50, 'Team Name must be under 50 characters.'),
+    college: z.enum(['VIIT', 'VIEW'], {
+        errorMap: () => ({ message: 'Please select a valid College Name.' })
+    }),
+    teamSize: z.number().int().min(2).max(4),
+    domain: z.enum(['AI & ML', 'Cloud Computing', 'Cybersecurity', 'Robotics'], {
+        errorMap: () => ({ message: 'Please select a valid Hackathon Domain.' })
+    }),
+    members: z.array(MemberSchema)
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const teamSizeSelect = document.getElementById('team_size');
@@ -333,34 +363,71 @@ document.addEventListener('DOMContentLoaded', function() {
     registrationForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // 1. Double check client validation states
         const size = parseInt(teamSizeSelect.value);
-        if (isNaN(size) || size < 2 || size > 4) {
-            showToast('Please select a valid team size.', 'warning');
-            teamSizeSelect.focus();
-            return;
-        }
-
-        if (teamNameInput.value.trim() === '') {
-            showToast('Please enter a Team Name.', 'warning');
-            teamNameInput.focus();
-            return;
-        }
-
         const collegeSelect = document.getElementById('college');
-        if (collegeSelect.value === '') {
-            showToast('Please select your College Name.', 'warning');
-            collegeSelect.focus();
+        const domainSelect = document.getElementById('domain');
+
+        // Compile payload for Zod validation
+        const membersData = [];
+        for (let i = 0; i < size; i++) {
+            const card = document.querySelector(`.member-card[data-index="${i}"]`);
+            if (card) {
+                const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                membersData.push({
+                    salutation: card.querySelector('.member-salutation').value,
+                    name: card.querySelector('.member-name').value.trim(),
+                    email: card.querySelector('.member-email').value.trim(),
+                    mobile: card.querySelector('.member-mobile').value.trim(),
+                    branch: checkedBranch ? checkedBranch.value : '',
+                    year: card.querySelector('.member-year').value
+                });
+            }
+        }
+
+        const formData = {
+            teamName: teamNameInput.value.trim(),
+            college: collegeSelect.value,
+            teamSize: size,
+            domain: domainSelect.value,
+            members: membersData
+        };
+
+        // Run Zod validation
+        const validationResult = RegistrationSchema.safeParse(formData);
+        if (!validationResult.success) {
+            const firstError = validationResult.error.errors[0];
+            let errorMsg = firstError.message;
+            
+            // Format error message to specify which member it relates to
+            if (firstError.path[0] === 'members') {
+                const memberIdx = parseInt(firstError.path[1]) + 1;
+                errorMsg = `Member #${memberIdx}: ${errorMsg}`;
+            }
+            
+            showToast(errorMsg, 'warning');
+            
+            // Focus on the erroneous input element if possible
+            if (firstError.path[0] === 'members') {
+                const idx = firstError.path[1];
+                const field = firstError.path[2];
+                const card = document.querySelector(`.member-card[data-index="${idx}"]`);
+                if (card) {
+                    if (field === 'salutation') card.querySelector('.member-salutation').focus();
+                    else if (field === 'name') card.querySelector('.member-name').focus();
+                    else if (field === 'email') card.querySelector('.member-email').focus();
+                    else if (field === 'mobile') card.querySelector('.member-mobile').focus();
+                    else if (field === 'year') card.querySelector('.member-year').focus();
+                }
+            } else {
+                if (firstError.path[0] === 'teamName') teamNameInput.focus();
+                else if (firstError.path[0] === 'college') collegeSelect.focus();
+                else if (firstError.path[0] === 'domain') domainSelect.focus();
+            }
+            
             return;
         }
 
-        const domainSelect = document.getElementById('domain');
-        if (domainSelect.value === '') {
-            showToast('Please select a Hackathon Domain.', 'warning');
-            domainSelect.focus();
-            return;
-        }
-        
+        // 2. Uniqueness and DB validation state checks
         if (!validationStates.teamName) {
             showToast('Please choose a valid, unique team name.', 'warning');
             teamNameInput.focus();
@@ -368,49 +435,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         for (let i = 0; i < size; i++) {
-            const card = document.querySelector(`.member-card[data-index="${i}"]`);
-            if (card) {
-                const salutationVal = card.querySelector('.member-salutation').value;
-                if (salutationVal === '') {
-                    showToast(`Please select a Salutation for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-salutation').focus();
-                    return;
-                }
-
-                const nameVal = card.querySelector('.member-name').value.trim();
-                if (nameVal === '') {
-                    showToast(`Please enter the Full Name for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-name').focus();
-                    return;
-                }
-
-                const emailVal = card.querySelector('.member-email').value.trim();
-                if (emailVal === '') {
-                    showToast(`Please enter the Email Address for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-email').focus();
-                    return;
-                }
-
-                const mobileVal = card.querySelector('.member-mobile').value.trim();
-                if (mobileVal === '' || mobileVal === '+91') {
-                    showToast(`Please enter the Mobile Number for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-mobile').focus();
-                    return;
-                }
-
-                const checkedBranch = card.querySelector('.member-branch-radio:checked');
-                if (!checkedBranch) {
-                    showToast(`Please select a Branch for Member #${i+1}.`, 'warning');
-                    return;
-                }
-                const yearVal = card.querySelector('.member-year').value;
-                if (yearVal === '') {
-                    showToast(`Please select an Academic Year for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-year').focus();
-                    return;
-                }
-            }
-
             if (!validationStates.emails[i]) {
                 showToast(`Please verify the email address for Member #${i+1}.`, 'warning');
                 document.querySelector(`.member-card[data-index="${i}"] .member-email`).focus();

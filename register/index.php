@@ -145,6 +145,6 @@ require_once __DIR__ . '/../includes/functions.php';
     </div>
 
     <!-- Dynamic JavaScript and Validation Controllers -->
-    <script src="js/registration.js"></script>
+    <script type="module" src="js/registration.js"></script>
 </body>
 </html>
