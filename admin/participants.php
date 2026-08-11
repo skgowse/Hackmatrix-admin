@@ -280,10 +280,7 @@ require_once __DIR__ . '/header.php';
                     </select>
                 </div>
 
-                <div class="form-group" style="grid-column: span 2;">
-                    <label>Project Title / Idea Concept</label>
-                    <input type="text" name="project_title" id="modal_project_title" class="form-control" required placeholder="e.g. Secure Decentralized Invoicing">
-                </div>
+                <input type="hidden" name="project_title" id="modal_project_title">
                 
                 <div class="form-group">
                     <label>Status</label>

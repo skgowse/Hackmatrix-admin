@@ -32,14 +32,14 @@ $teamName = trim($_POST['team_name'] ?? '');
 $college = trim($_POST['college'] ?? '');
 $teamSize = intval($_POST['team_size'] ?? 0);
 $domain = trim($_POST['domain'] ?? '');
-$projectTitle = trim($_POST['project_title'] ?? '');
+$projectTitle = '';
 $status = trim($_POST['status'] ?? 'ACTIVE');
 $members = $_POST['members'] ?? [];
 
 $allowedDomains = ['AI & ML', 'Cloud Computing', 'Cybersecurity', 'Robotics'];
 $allowedYears = ['1', '2', '3', '4'];
 
-if (empty($teamName) || empty($college) || empty($projectTitle) || empty($domain)) {
+if (empty($teamName) || empty($college) || empty($domain)) {
     jsonResponse(false, 'All team profile fields are required.');
 }
 

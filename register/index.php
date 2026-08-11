@@ -72,8 +72,8 @@ require_once __DIR__ . '/../includes/functions.php';
                     </div>
                 </div>
 
-                <div class="form-grid-2" style="margin-top: 20px;">
-                    <div class="form-group">
+                <div style="margin-top: 20px;">
+                    <div class="form-group" style="max-width: 500px;">
                         <label for="domain">HACKATHON DOMAIN <span class="required">*</span></label>
                         <select id="domain" name="domain" class="form-control">
                             <option value="AI & ML">AI & ML (Artificial Intelligence & Machine Learning)</option>
@@ -81,11 +81,6 @@ require_once __DIR__ . '/../includes/functions.php';
                             <option value="Cybersecurity">Cybersecurity</option>
                             <option value="Robotics">Robotics</option>
                         </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="project_title">PROJECT TITLE / IDEA CONCEPT <span class="required">*</span></label>
-                        <input type="text" id="project_title" name="project_title" class="form-control" placeholder="e.g. Blockchain Medical Records" required>
                     </div>
                 </div>
             </section>

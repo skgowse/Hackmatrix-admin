@@ -24,7 +24,7 @@ $teamName = trim($_POST['team_name'] ?? '');
 $college = trim($_POST['college'] ?? '');
 $teamSize = intval($_POST['team_size'] ?? 0);
 $domain = trim($_POST['domain'] ?? '');
-$projectTitle = trim($_POST['project_title'] ?? '');
+$projectTitle = '';
 $members = $_POST['members'] ?? [];
 
 // Predefined allowed values
@@ -33,7 +33,7 @@ $allowedYears = ['1', '2', '3', '4'];
 $allowedBranches = ['CSE', 'ECE', 'EEE', 'IT', 'MECH', 'CIVIL', 'AIDS', 'AIML', 'CS', 'Other'];
 
 // 3. Validation Checks
-if (empty($teamName) || empty($college) || empty($projectTitle) || empty($domain)) {
+if (empty($teamName) || empty($college) || empty($domain)) {
     jsonResponse(false, 'All team information fields are required.');
 }
 
