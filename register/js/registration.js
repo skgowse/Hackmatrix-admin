@@ -105,18 +105,18 @@ document.addEventListener('DOMContentLoaded', function() {
             grid.innerHTML = `
                 <div class="form-group">
                     <label>Full Name <span class="required">*</span></label>
-                    <input type="text" name="members[${index}][name]" class="form-control member-name" placeholder="Enter full name" required value="${saved.name}">
+                    <input type="text" name="members[${index}][name]" class="form-control member-name" placeholder="Enter full name" value="${saved.name}">
                 </div>
                 
                 <div class="form-group">
                     <label>Email Address <span class="required">*</span></label>
-                    <input type="email" name="members[${index}][email]" class="form-control member-email" placeholder="e.g. member${index+1}@gmail.com" required value="${saved.email}">
+                    <input type="email" name="members[${index}][email]" class="form-control member-email" placeholder="e.g. member${index+1}@gmail.com" value="${saved.email}">
                     <div class="validation-message member-email-msg"></div>
                 </div>
                 
                 <div class="form-group">
                     <label>Mobile Number <span class="required">*</span></label>
-                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="+91 XXXXXXXXXX" required value="${saved.mobile || '+91'}" pattern="\\+91[0-9]{10}">
+                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="+91 XXXXXXXXXX" value="${saved.mobile || '+91'}" pattern="\\+91[0-9]{10}">
                     <div class="validation-message member-mobile-msg"></div>
                 </div>
 
@@ -326,6 +326,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        if (teamNameInput.value.trim() === '') {
+            showToast('Please enter a Team Name.', 'warning');
+            teamNameInput.focus();
+            return;
+        }
+
         const collegeSelect = document.getElementById('college');
         if (collegeSelect.value === '') {
             showToast('Please select your College Name.', 'warning');
@@ -349,6 +355,27 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const card = document.querySelector(`.member-card[data-index="${i}"]`);
             if (card) {
+                const nameVal = card.querySelector('.member-name').value.trim();
+                if (nameVal === '') {
+                    showToast(`Please enter the Full Name for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-name').focus();
+                    return;
+                }
+
+                const emailVal = card.querySelector('.member-email').value.trim();
+                if (emailVal === '') {
+                    showToast(`Please enter the Email Address for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-email').focus();
+                    return;
+                }
+
+                const mobileVal = card.querySelector('.member-mobile').value.trim();
+                if (mobileVal === '' || mobileVal === '+91') {
+                    showToast(`Please enter the Mobile Number for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-mobile').focus();
+                    return;
+                }
+
                 const checkedBranch = card.querySelector('.member-branch-radio:checked');
                 if (!checkedBranch) {
                     showToast(`Please select a Branch for Member #${i+1}.`, 'warning');

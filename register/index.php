@@ -53,13 +53,13 @@ require_once __DIR__ . '/../includes/functions.php';
                 <div class="form-grid-3">
                     <div class="form-group">
                         <label for="team_name">TEAM NAME <span class="required">*</span></label>
-                        <input type="text" id="team_name" name="team_name" class="form-control" placeholder="e.g. CyberTitans" required autocomplete="off">
+                        <input type="text" id="team_name" name="team_name" class="form-control" placeholder="e.g. CyberTitans" autocomplete="off">
                         <div class="validation-message" id="team_name_msg"></div>
                     </div>
                     
                     <div class="form-group">
                         <label for="college">COLLEGE / INSTITUTION <span class="required">*</span></label>
-                        <select id="college" name="college" class="form-control" required>
+                        <select id="college" name="college" class="form-control">
                             <option value="">Select College Name</option>
                             <option value="VIIT">VIIT</option>
                             <option value="VIEW">VIEW</option>
@@ -68,7 +68,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
                     <div class="form-group">
                         <label for="team_size">TEAM SIZE (MEMBERS) <span class="required">*</span></label>
-                        <select id="team_size" name="team_size" class="form-control" required>
+                        <select id="team_size" name="team_size" class="form-control">
                             <option value="">Select Team Size</option>
                             <option value="2">2 Members</option>
                             <option value="3">3 Members</option>
@@ -80,7 +80,7 @@ require_once __DIR__ . '/../includes/functions.php';
                 <div style="margin-top: 20px;">
                     <div class="form-group" style="max-width: 500px;">
                         <label for="domain">HACKATHON DOMAIN <span class="required">*</span></label>
-                        <select id="domain" name="domain" class="form-control" required>
+                        <select id="domain" name="domain" class="form-control">
                             <option value="">Select Hackathon Domain</option>
                             <option value="AI & ML">AI & ML (Artificial Intelligence & Machine Learning)</option>
                             <option value="Cloud Computing">Cloud Computing</option>
