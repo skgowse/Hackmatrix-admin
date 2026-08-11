@@ -49,6 +49,7 @@ $emailTemplate = $pdo->query("SELECT * FROM email_templates LIMIT 1")->fetch();
 // Sample rendering for visual preview
 $mockParticipant = [
     'participant_name' => 'Rahul Kumar',
+    'email' => 'rahul@gmail.com',
     'branch' => 'Artificial Intelligence & Data Science',
     'team_name' => 'Team Alpha',
     'team_no' => 'HM001',
