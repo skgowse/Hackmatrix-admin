@@ -337,7 +337,7 @@ require_once __DIR__ . '/header.php';
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '+91', branch: '', year: '' };
+            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '+91', branch: '', year: '', salutation: '' };
             const disabled = activeMode === 'view' ? 'disabled' : '';
             
             // Format phone number with +91
@@ -372,6 +372,13 @@ require_once __DIR__ . '/header.php';
                 yearOptions += `<option value="${y}" ${saved.year === y ? 'selected' : ''}>${y} Year</option>`;
             });
             
+            // Generate salutation options
+            const salutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
+            let salutationOptions = '<option value="">Select Salutation</option>';
+            salutations.forEach(s => {
+                salutationOptions += `<option value="${s}" ${saved.salutation === s ? 'selected' : ''}>${s}</option>`;
+            });
+            
             card.innerHTML = `
                 ${idField}
                 <div style="font-weight:700; color:white; font-size:12px; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; display:flex; justify-content:space-between;">
@@ -379,6 +386,12 @@ require_once __DIR__ . '/header.php';
                     <span style="color:var(--text-muted); font-size:11px;">${saved.certificate_id || 'Pending Generation'}</span>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+                    <div class="form-group">
+                        <label style="font-size:10px;">Salutation</label>
+                        <select name="members[${index}][salutation]" class="form-control member-salutation" ${disabled}>
+                            ${salutationOptions}
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label style="font-size:10px;">Full Name</label>
                         <input type="text" name="members[${index}][name]" class="form-control" required value="${e(saved.name)}" ${disabled}>
@@ -433,15 +446,20 @@ require_once __DIR__ . '/header.php';
             for (let i = 0; i < 4; i++) {
                 const nameInput = document.querySelector(`input[name="members[${i}][name]"]`);
                 if (nameInput) {
-                    const idInput = document.querySelector(`input[name="members[${i}][id]"]`);
-                    uiData[i] = {
-                        id: idInput ? idInput.value : '',
-                        name: nameInput.value,
-                        email: document.querySelector(`input[name="members[${i}][email]"]`).value,
-                        mobile: document.querySelector(`input[name="members[${i}][mobile]"]`).value,
-                        branch: card.querySelector('.member-branch-radio:checked') ? card.querySelector('.member-branch-radio:checked').value : '',
-                        year: document.querySelector(`select[name="members[${i}][year]"]`).value
-                    };
+                    const card = document.querySelector(`.member-card[data-index="${i}"]`);
+                    if (card) {
+                        const idInput = document.querySelector(`input[name="members[${i}][id]"]`);
+                        const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                        uiData[i] = {
+                            id: idInput ? idInput.value : '',
+                            salutation: card.querySelector('.member-salutation').value,
+                            name: nameInput.value,
+                            email: document.querySelector(`input[name="members[${i}][email]"]`).value,
+                            mobile: document.querySelector(`input[name="members[${i}][mobile]"]`).value,
+                            branch: checkedBranch ? checkedBranch.value : '',
+                            year: document.querySelector(`select[name="members[${i}][year]"]`).value
+                        };
+                    }
                 }
             }
             existingMembersData = uiData;

@@ -54,6 +54,7 @@ if (isset($_POST['run_setup'])) {
             'team_members' => "CREATE TABLE IF NOT EXISTS team_members (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 team_id INT NOT NULL,
+                salutation VARCHAR(15) DEFAULT '',
                 name VARCHAR(100) NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
                 mobile VARCHAR(20) NOT NULL,
@@ -77,6 +78,7 @@ if (isset($_POST['run_setup'])) {
                 tm.branch AS branch,
                 tm.email AS email,
                 tm.certificate_id AS certificate_id,
+                tm.salutation AS salutation,
                 tm.created_at AS created_at,
                 tm.updated_at AS updated_at
             FROM team_members tm

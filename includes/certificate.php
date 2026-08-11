@@ -136,6 +136,11 @@ class CertificateGenerator {
             $nameText = ucwords(strtolower($nameText));
         }
         
+        $salutation = trim($participant['salutation'] ?? '');
+        if ($salutation !== '') {
+            $nameText = $salutation . ' ' . $nameText;
+        }
+        
         // Format branch to professional representation
         $branchText = trim($participant['branch']);
         if (strlen($branchText) <= 5) {

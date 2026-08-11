@@ -60,8 +60,11 @@ foreach ($members as $index => $m) {
     $branch = trim($m['branch'] ?? '');
     $year = trim($m['year'] ?? '');
     
-    $num = $index + 1;
-    $roleName = ($index === 0) ? 'Team Lead' : 'Member';
+    $salutation = trim($m['salutation'] ?? '');
+    $allowedSalutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
+    if (empty($salutation) || !in_array($salutation, $allowedSalutations)) {
+        jsonResponse(false, "Please select a valid Salutation (Mr., Miss., Mrs., Ms.) for Member $num.");
+    }
     
     if (empty($name) || empty($email) || empty($mobile) || empty($branch) || empty($year)) {
         jsonResponse(false, "All fields are required for Member $num ($roleName).");
@@ -151,12 +154,13 @@ try {
         }
         $branch = trim($m['branch'] ?? '');
         $year = trim($m['year'] ?? '');
+        $salutation = trim($m['salutation'] ?? '');
         $role = ($index === 0) ? 'Team Lead' : 'Member';
         
         // Generate member certificate ID: e.g. HM26-0005-1, HM26-0005-2, etc.
         $memberCertId = $teamCode . "-" . ($index + 1);
         
-        $stmt = $pdo->prepare("INSERT INTO team_members (team_id, name, email, mobile, branch, year, role, certificate_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO team_members (team_id, name, email, mobile, branch, year, role, certificate_id, salutation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $teamDbId,
             $name,
@@ -165,7 +169,8 @@ try {
             $branch,
             $year,
             $role,
-            $memberCertId
+            $memberCertId,
+            $salutation
         ]);
         $memberDbId = $pdo->lastInsertId();
         

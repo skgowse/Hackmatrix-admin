@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (card) {
                 const checkedBranch = card.querySelector('.member-branch-radio:checked');
                 currentData[i] = {
+                    salutation: card.querySelector('.member-salutation').value,
                     name: card.querySelector('.member-name').value,
                     email: card.querySelector('.member-email').value,
                     mobile: card.querySelector('.member-mobile').value,
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = currentData[i] || { name: '', email: '', mobile: '+91', branch: '', year: '' };
+            const saved = currentData[i] || { name: '', email: '', mobile: '+91', branch: '', year: '', salutation: '' };
             
             // Build card container
             const card = document.createElement('div');
@@ -96,6 +97,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
 
+            // Generate salutation options
+            const salutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
+            let salutationOptions = '<option value="">Select Salutation</option>';
+            salutations.forEach(s => {
+                salutationOptions += `<option value="${s}" ${saved.salutation === s ? 'selected' : ''}>${s}</option>`;
+            });
+
             // Generate year options
             let yearOptions = '<option value="">Select Academic Year</option>';
             years.forEach(y => {
@@ -103,6 +111,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             grid.innerHTML = `
+                <div class="form-group">
+                    <label>Salutation <span class="required">*</span></label>
+                    <select name="members[${index}][salutation]" class="form-control member-salutation">
+                        ${salutationOptions}
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label>Full Name <span class="required">*</span></label>
                     <input type="text" name="members[${index}][name]" class="form-control member-name" placeholder="Enter full name" value="${saved.name}">
@@ -355,6 +370,13 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const card = document.querySelector(`.member-card[data-index="${i}"]`);
             if (card) {
+                const salutationVal = card.querySelector('.member-salutation').value;
+                if (salutationVal === '') {
+                    showToast(`Please select a Salutation for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-salutation').focus();
+                    return;
+                }
+
                 const nameVal = card.querySelector('.member-name').value.trim();
                 if (nameVal === '') {
                     showToast(`Please enter the Full Name for Member #${i+1}.`, 'warning');
