@@ -4,12 +4,8 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/functions.php';
-
-// Start session if not active
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
