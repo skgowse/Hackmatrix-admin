@@ -30,7 +30,7 @@ $members = $_POST['members'] ?? [];
 // Predefined allowed values
 $allowedDomains = ['AI & ML', 'Cloud Computing', 'Cybersecurity', 'Robotics'];
 $allowedYears = ['1', '2', '3', '4'];
-$allowedBranches = ['CSE', 'ECE', 'EEE', 'IT', 'MECH', 'CIVIL', 'AIDS', 'AIML', 'CS', 'Other'];
+$allowedBranches = ['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'];
 
 // 3. Validation Checks
 if (empty($teamName) || empty($college) || empty($domain)) {

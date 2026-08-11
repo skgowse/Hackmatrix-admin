@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Predefined lists
-    const branches = ['AIDS', 'AIML', 'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'CS', 'Other'];
+    const branches = ['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'];
     const years = [
         { val: '1', label: '1st Year' },
         { val: '2', label: '2nd Year' },
@@ -44,11 +44,12 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < 4; i++) {
             const card = document.querySelector(`.member-card[data-index="${i}"]`);
             if (card) {
+                const checkedBranch = card.querySelector('.member-branch-radio:checked');
                 currentData[i] = {
                     name: card.querySelector('.member-name').value,
                     email: card.querySelector('.member-email').value,
                     mobile: card.querySelector('.member-mobile').value,
-                    branch: card.querySelector('.member-branch').value,
+                    branch: checkedBranch ? checkedBranch.value : '',
                     year: card.querySelector('.member-year').value
                 };
             }
@@ -82,10 +83,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const grid = document.createElement('div');
             grid.className = 'form-grid-2';
             
-            // Generate branch options
-            let branchOptions = '<option value="">Select Branch</option>';
-            branches.forEach(b => {
-                branchOptions += `<option value="${b}" ${saved.branch === b ? 'selected' : ''}>${b}</option>`;
+            // Generate branch radio inputs
+            let branchRadioGrid = '';
+            branches.forEach((b, bIdx) => {
+                const radioId = `branch_${index}_${bIdx}`;
+                const checked = (saved.branch === b) ? 'checked' : '';
+                branchRadioGrid += `
+                    <label class="radio-label" for="${radioId}">
+                        <input type="radio" id="${radioId}" name="members[${index}][branch]" value="${b}" class="member-branch-radio" ${checked}>
+                        <span>${b}</span>
+                    </label>
+                `;
             });
 
             // Generate year options
@@ -112,18 +120,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="validation-message member-mobile-msg"></div>
                 </div>
 
-                <div class="form-grid-2" style="grid-column: span 1; gap: 15px; display: grid;">
-                    <div class="form-group">
-                        <label>Branch / Department <span class="required">*</span></label>
-                        <select name="members[${index}][branch]" class="form-control member-branch">
-                            ${branchOptions}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Academic Year <span class="required">*</span></label>
-                        <select name="members[${index}][year]" class="form-control member-year">
-                            ${yearOptions}
-                        </select>
+                <div class="form-group">
+                    <label>Academic Year <span class="required">*</span></label>
+                    <select name="members[${index}][year]" class="form-control member-year">
+                        ${yearOptions}
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 10px;">
+                    <label>Branch / Department <span class="required">*</span></label>
+                    <div class="branch-radio-group">
+                        ${branchRadioGrid}
                     </div>
                 </div>
             `;
@@ -342,10 +349,9 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const card = document.querySelector(`.member-card[data-index="${i}"]`);
             if (card) {
-                const branchVal = card.querySelector('.member-branch').value;
-                if (branchVal === '') {
+                const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                if (!checkedBranch) {
                     showToast(`Please select a Branch for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-branch').focus();
                     return;
                 }
                 const yearVal = card.querySelector('.member-year').value;

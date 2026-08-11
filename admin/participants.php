@@ -328,7 +328,7 @@ require_once __DIR__ . '/header.php';
     
     // Options
     const years = ['1', '2', '3', '4'];
-    const branches = ['AIDS', 'AIML', 'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'CS', 'Other'];
+    const branches = ['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'];
 
     // Render forms inside the modal based on size selection
     function renderModalMembers(size) {
@@ -354,9 +354,17 @@ require_once __DIR__ . '/header.php';
             // Hidden member ID
             let idField = saved.id ? `<input type="hidden" name="members[${index}][id]" value="${saved.id}">` : '';
             
-            let branchOptions = '<option value="">Select Branch</option>';
-            branches.forEach(b => {
-                branchOptions += `<option value="${b}" ${saved.branch === b ? 'selected' : ''}>${b}</option>`;
+            // Generate branch radio inputs
+            let branchRadioGrid = '';
+            branches.forEach((b, bIdx) => {
+                const radioId = `modal_branch_${index}_${bIdx}`;
+                const checked = (saved.branch === b) ? 'checked' : '';
+                branchRadioGrid += `
+                    <label style="display:inline-flex; align-items:center; gap:6px; margin-right:12px; margin-bottom:8px; cursor:pointer; color:#e2e8f0; font-size:12px; user-select:none;">
+                        <input type="radio" id="${radioId}" name="members[${index}][branch]" value="${b}" ${checked} ${disabled} class="member-branch-radio">
+                        <span>${b}</span>
+                    </label>
+                `;
             });
 
             let yearOptions = '<option value="">Select Year</option>';
@@ -383,18 +391,16 @@ require_once __DIR__ . '/header.php';
                         <label style="font-size:10px;">Mobile Number</label>
                         <input type="text" name="members[${index}][mobile]" class="form-control member-mobile" required value="${mobVal}" ${disabled} pattern="\\+91[0-9]{10}">
                     </div>
-                    <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <div>
-                            <label style="font-size:10px;">Branch</label>
-                            <select name="members[${index}][branch]" class="form-control" ${disabled}>
-                                ${branchOptions}
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:10px;">Year</label>
-                            <select name="members[${index}][year]" class="form-control" ${disabled}>
-                                ${yearOptions}
-                            </select>
+                    <div class="form-group">
+                        <label style="font-size:10px;">Year</label>
+                        <select name="members[${index}][year]" class="form-control" ${disabled}>
+                            ${yearOptions}
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1; margin-top: 5px;">
+                        <label style="font-size:10px;">Branch / Department</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px 10px;">
+                            ${branchRadioGrid}
                         </div>
                     </div>
                 </div>
@@ -433,7 +439,7 @@ require_once __DIR__ . '/header.php';
                         name: nameInput.value,
                         email: document.querySelector(`input[name="members[${i}][email]"]`).value,
                         mobile: document.querySelector(`input[name="members[${i}][mobile]"]`).value,
-                        branch: document.querySelector(`select[name="members[${i}][branch]"]`).value,
+                        branch: card.querySelector('.member-branch-radio:checked') ? card.querySelector('.member-branch-radio:checked').value : '',
                         year: document.querySelector(`select[name="members[${i}][year]"]`).value
                     };
                 }
