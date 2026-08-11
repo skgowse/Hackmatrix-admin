@@ -74,8 +74,9 @@ foreach ($members as $index => $m) {
         jsonResponse(false, "All fields are required for Member $num ($roleName).");
     }
     
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        jsonResponse(false, "Invalid email format for Member $num ($roleName).");
+    $emailValid = validateEmailStrongly($email);
+    if ($emailValid !== true) {
+        jsonResponse(false, "Member $num ($roleName): " . $emailValid);
     }
     
     if (strlen($mobile) > 10) {

@@ -14,8 +14,9 @@ if (empty($email)) {
     jsonResponse(false, 'Email address is required.', ['available' => false]);
 }
 
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    jsonResponse(false, 'Invalid email format.', ['available' => false]);
+$emailValid = validateEmailStrongly($email);
+if ($emailValid !== true) {
+    jsonResponse(false, $emailValid, ['available' => false]);
 }
 
 try {

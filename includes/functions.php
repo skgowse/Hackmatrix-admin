@@ -135,3 +135,61 @@ function validateUploadedFile($file, $maxSize, $allowedExtensions) {
     
     return true;
 }
+
+/**
+ * Perform strong validation on an email address:
+ * - Check format
+ * - Check for common typo domains (e.g. gnail.com, gamil.com, yaho.com)
+ * - Perform a DNS check (MX/A record search)
+ * 
+ * @param string $email
+ * @return string|true Returns true if valid, or a string error message if invalid.
+ */
+function validateEmailStrongly($email) {
+    $email = strtolower(trim($email));
+    
+    // 1. Basic filter validation
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Invalid email format.';
+    }
+    
+    // 2. Extract domain part
+    $parts = explode('@', $email);
+    $domain = end($parts);
+    
+    // 3. Known typo domain list
+    $typos = [
+        'gamil.com' => 'gmail.com',
+        'gnail.com' => 'gmail.com',
+        'gmaill.com' => 'gmail.com',
+        'gmal.com' => 'gmail.com',
+        'gmil.com' => 'gmail.com',
+        'gail.com' => 'gmail.com',
+        'gmeil.com' => 'gmail.com',
+        'yahooo.com' => 'yahoo.com',
+        'yaho.com' => 'yahoo.com',
+        'yahu.com' => 'yahoo.com',
+        'outlok.com' => 'outlook.com',
+        'outloo.com' => 'outlook.com',
+        'hotmale.com' => 'hotmail.com',
+        'hotmial.com' => 'hotmail.com'
+    ];
+    
+    if (array_key_exists($domain, $typos)) {
+        return "Invalid email domain. Did you mean '{$typos[$domain]}'?";
+    }
+    
+    // 4. DNS MX record validation (only when connected online)
+    if (function_exists('checkdnsrr')) {
+        $hasMX = @checkdnsrr($domain, 'MX');
+        if (!$hasMX) {
+            $hasA = @checkdnsrr($domain, 'A');
+            $hasAAAA = @checkdnsrr($domain, 'AAAA');
+            if (!$hasA && !$hasAAAA) {
+                return "The email domain '{$domain}' does not exist or has no active mail server.";
+            }
+        }
+    }
+    
+    return true;
+}
