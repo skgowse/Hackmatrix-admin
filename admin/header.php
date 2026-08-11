@@ -113,7 +113,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Main Content -->
     <main class="main-content">
         <!-- Top bar for mobile menu toggle -->
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; display: none;" class="menu-toggle-bar">
+        <div class="menu-toggle-bar">
             <button class="menu-toggle" id="menuToggle">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>

@@ -73,6 +73,30 @@
             }, 300);
         }, 4000);
     }
+
+    // Hide menu bar on scroll down, show on scroll up
+    let lastScrollTop = 0;
+    const menuBar = document.querySelector('.menu-toggle-bar');
+    
+    if (menuBar) {
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > 50) {
+                if (scrollTop > lastScrollTop) {
+                    // Scrolling down - hide menu bar
+                    menuBar.classList.add('scroll-hidden');
+                } else {
+                    // Scrolling up - show menu bar
+                    menuBar.classList.remove('scroll-hidden');
+                }
+            } else {
+                // Near the top - always show
+                menuBar.classList.remove('scroll-hidden');
+            }
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, { passive: true });
+    }
 </script>
 </body>
 </html>
