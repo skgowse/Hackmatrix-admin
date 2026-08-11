@@ -153,30 +153,32 @@ class CertificateGenerator {
         $pdf->SetFont($nameFont, $nameStyle, $nameSize);
         $pdf->SetTextColor($nr, $ng, $nb);
         $cellHeight = $nameSize * 0.45;
+        $nameWidth = $pdf->GetStringWidth($nameText);
         if ($nameAlign === 'C') {
-            $pdf->SetXY(0, $name_y - ($cellHeight / 2));
-            $pdf->Cell($pageWidth, $cellHeight, $nameText, 0, 0, 'C');
+            $pdf->SetXY($name_x - ($nameWidth / 2), $name_y - ($cellHeight / 2));
+            $pdf->Cell($nameWidth, $cellHeight, $nameText, 0, 0, 'C');
         } elseif ($nameAlign === 'R') {
-            $pdf->SetXY(0, $name_y - ($cellHeight / 2));
-            $pdf->Cell($name_x, $cellHeight, $nameText, 0, 0, 'R');
+            $pdf->SetXY($name_x - $nameWidth, $name_y - ($cellHeight / 2));
+            $pdf->Cell($nameWidth, $cellHeight, $nameText, 0, 0, 'R');
         } else {
             $pdf->SetXY($name_x, $name_y - ($cellHeight / 2));
-            $pdf->Cell(0, $cellHeight, $nameText, 0, 0, 'L');
+            $pdf->Cell($nameWidth, $cellHeight, $nameText, 0, 0, 'L');
         }
 
         // 2. Draw Branch / Department
         $pdf->SetFont($branchFont, $branchStyle, $branchSize);
         $pdf->SetTextColor($br, $bg, $bb);
         $branchCellHeight = $branchSize * 0.45;
+        $branchWidth = $pdf->GetStringWidth($branchText);
         if ($branchAlign === 'C') {
-            $pdf->SetXY(0, $branch_y - ($branchCellHeight / 2));
-            $pdf->Cell($pageWidth, $branchCellHeight, $branchText, 0, 0, 'C');
+            $pdf->SetXY($branch_x - ($branchWidth / 2), $branch_y - ($branchCellHeight / 2));
+            $pdf->Cell($branchWidth, $branchCellHeight, $branchText, 0, 0, 'C');
         } elseif ($branchAlign === 'R') {
-            $pdf->SetXY(0, $branch_y - ($branchCellHeight / 2));
-            $pdf->Cell($branch_x, $branchCellHeight, $branchText, 0, 0, 'R');
+            $pdf->SetXY($branch_x - $branchWidth, $branch_y - ($branchCellHeight / 2));
+            $pdf->Cell($branchWidth, $branchCellHeight, $branchText, 0, 0, 'R');
         } else {
             $pdf->SetXY($branch_x, $branch_y - ($branchCellHeight / 2));
-            $pdf->Cell(0, $branchCellHeight, $branchText, 0, 0, 'L');
+            $pdf->Cell($branchWidth, $branchCellHeight, $branchText, 0, 0, 'L');
         }
 
 
