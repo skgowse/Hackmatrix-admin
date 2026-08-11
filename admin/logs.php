@@ -3,10 +3,13 @@
  * HackMatrix 1.0 - Activity & Email Logs Viewer & Reports
  */
 
-require_once __DIR__ . '/header.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Enforce login
+requireLogin();
 
 $pdo = getDBConnection();
-$type = $_GET['type'] ?? 'activity'; // 'activity' or 'email'
 
 // Handle CSV Delivery Report Download
 if (isset($_GET['download_report'])) {
@@ -42,6 +45,10 @@ if (isset($_GET['download_report'])) {
     fclose($output);
     exit();
 }
+
+require_once __DIR__ . '/header.php';
+
+$type = $_GET['type'] ?? 'activity'; // 'activity' or 'email'
 
 $search = trim($_GET['search'] ?? '');
 $limit = 15;
