@@ -34,7 +34,7 @@ require_once __DIR__ . '/../includes/functions.php';
             <h1>Hackathon Registration</h1>
             <p class="subtitle">Secure your team's slot for the premier 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.</p>
             <div class="reg-meta">
-                <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Deadline: August 20, 2026</span>
+                <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> This is submitted on the day of the hackathon</span>
                 <span><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Global Encrypted Verification</span>
             </div>
         </header>
