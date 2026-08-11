@@ -175,22 +175,7 @@ class CertificateGenerator {
         $pdf->SetXY(($pageWidth - 210) / 2, $desc_y);
         $pdf->MultiCell(210, 5.5, $descText, 0, 'C', false);
 
-        // 6. Draw Certificate ID (at its exact coordinate and alignment specified in the editor!)
-        $pdf->SetFont($certFont, $certStyle, $certSize);
-        $pdf->SetTextColor($cr, $cg, $cb);
-        $certCellHeight = $certSize * 0.45;
-        $cert_text = "Certificate ID: " . $participant['certificate_id'];
-        
-        if ($certAlign === 'C') {
-            $pdf->SetXY(0, $cert_y - ($certCellHeight / 2));
-            $pdf->Cell($pageWidth, $certCellHeight, $cert_text, 0, 0, 'C');
-        } elseif ($certAlign === 'R') {
-            $pdf->SetXY(0, $cert_y - ($certCellHeight / 2));
-            $pdf->Cell($cert_x, $certCellHeight, $cert_text, 0, 0, 'R');
-        } else {
-            $pdf->SetXY($cert_x, $cert_y - ($certCellHeight / 2));
-            $pdf->Cell(0, $certCellHeight, $cert_text, 0, 0, 'L');
-        }
+
         
         // 3. Output PDF file
         if ($outputPath !== null) {

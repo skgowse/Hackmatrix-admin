@@ -118,7 +118,6 @@ foreach ($fieldsList as $f) {
             <select id="activeFieldSelector" class="form-control">
                 <option value="participant_name">Name ({{participant_name}})</option>
                 <option value="branch">Branch ({{branch}})</option>
-                <option value="certificate_id">Certificate ID ({{certificate_id}})</option>
             </select>
         </div>
         
@@ -184,7 +183,6 @@ foreach ($fieldsList as $f) {
             <div id="branch_drag" class="draggable-field" data-field="branch">Artificial Intelligence & Data Science</div>
             
             <div id="desc_helper" class="editor-helper-text" style="color: #374151; font-family: Helvetica, sans-serif; pointer-events: none; position: absolute; transform: translate(-50%, 0); text-align: center; line-height: 1.4; opacity: 0.9;">for successfully participating in HackMatrix 1.0, a 2-Day Hackathon organized by the Department of Artificial Intelligence & Data Science, VIIT.</div>
-            <div id="certificate_id_drag" class="draggable-field" data-field="certificate_id">Certificate ID: HM26-001</div>
         </div>
     </div>
 </div>
@@ -326,7 +324,7 @@ foreach ($fieldsList as $f) {
         wrapper.style.height = containerHeight + 'px';
         
         // Position fields according to loaded config (or defaults)
-        const fields = ['participant_name', 'branch', 'certificate_id'];
+        const fields = ['participant_name', 'branch'];
         
         fields.forEach(f => {
             const dragEl = document.getElementById(f + '_drag');
@@ -508,7 +506,7 @@ foreach ($fieldsList as $f) {
     // Save Config Action via AJAX
     document.getElementById('saveConfigBtn').addEventListener('click', function() {
         const fieldsData = [];
-        const fields = ['participant_name', 'branch', 'certificate_id'];
+        const fields = ['participant_name', 'branch'];
         
         fields.forEach(f => {
             if (config[f]) {
