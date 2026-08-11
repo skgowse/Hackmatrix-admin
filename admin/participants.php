@@ -258,7 +258,11 @@ require_once __DIR__ . '/header.php';
                 
                 <div class="form-group">
                     <label>College / Institution</label>
-                    <input type="text" name="college" id="modal_college" class="form-control" required placeholder="e.g. VIIT">
+                    <select name="college" id="modal_college" class="form-control" required>
+                        <option value="">Select College Name</option>
+                        <option value="VIIT">VIIT</option>
+                        <option value="VIEW">VIEW</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -449,7 +453,7 @@ require_once __DIR__ . '/header.php';
         // Reset all inputs
         document.getElementById('team_db_id').value = '';
         document.getElementById('modal_team_name').value = '';
-        document.getElementById('modal_college').value = 'Vignan Institute of Information Technology';
+        document.getElementById('modal_college').value = '';
         document.getElementById('modal_team_size').value = '3';
         document.getElementById('modal_domain').value = 'AI & ML';
         document.getElementById('modal_project_title').value = '';

@@ -59,7 +59,11 @@ require_once __DIR__ . '/../includes/functions.php';
                     
                     <div class="form-group">
                         <label for="college">COLLEGE / INSTITUTION <span class="required">*</span></label>
-                        <input type="text" id="college" name="college" class="form-control" placeholder="e.g. Vignan Institute of Information Technology" required value="Vignan Institute of Information Technology">
+                        <select id="college" name="college" class="form-control" required>
+                            <option value="">Select College Name</option>
+                            <option value="VIIT">VIIT</option>
+                            <option value="VIEW">VIEW</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
