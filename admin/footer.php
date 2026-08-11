@@ -97,6 +97,24 @@
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }, { passive: true });
     }
+
+    // Sidebar Collapse Logic (Desktop)
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    const floatingMenuToggle = document.getElementById('floatingMenuToggle');
+    
+    if (sidebarCollapseBtn) {
+        sidebarCollapseBtn.addEventListener('click', function() {
+            document.body.classList.add('sidebar-collapsed');
+            localStorage.setItem('sidebar_collapsed', 'true');
+        });
+    }
+    
+    if (floatingMenuToggle) {
+        floatingMenuToggle.addEventListener('click', function() {
+            document.body.classList.remove('sidebar-collapsed');
+            localStorage.setItem('sidebar_collapsed', 'false');
+        });
+    }
 </script>
 </body>
 </html>

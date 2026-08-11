@@ -20,14 +20,30 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <title>HackMatrix 1.0 - Admin Portal</title>
     <link rel="stylesheet" href="../assets/css/index.css">
 </head>
-<body>
+<body class="">
+<script>
+    // Inline check to prevent visual flicker (FOUC) when sidebar collapsed state loads
+    if (localStorage.getItem('sidebar_collapsed') === 'true' && window.innerWidth > 1024) {
+        document.body.classList.add('sidebar-collapsed');
+    }
+</script>
+
+<!-- Floating menu toggle button when sidebar is collapsed (desktop) -->
+<button id="floatingMenuToggle" class="floating-menu-toggle" title="Show Admin Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
 
 <div class="app-layout">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <h2>HACKMATRIX 1.0</h2>
-            <p>ADMIN CONTROL PANEL</p>
+        <div class="sidebar-brand" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div>
+                <h2>HACKMATRIX 1.0</h2>
+                <p>ADMIN CONTROL PANEL</p>
+            </div>
+            <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Hide Admin Menu" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 6px; transition: all 0.2s ease;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+            </button>
         </div>
         
         <ul class="sidebar-menu">
