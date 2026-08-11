@@ -1,6 +1,6 @@
 <?php
 /**
- * HackMatrix 1.0 - SMTP Configurations & Test Email Dispatch
+ * HackMatrix 1.0 - Brevo API Configurations & Test Email Dispatch
  */
 
 require_once __DIR__ . '/header.php';
@@ -18,16 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     if (!validateCSRFToken($csrfToken)) {
         $error = 'Invalid security token (CSRF failure).';
     } else {
-        $host = trim($_POST['smtp_host'] ?? '');
-        $port = intval($_POST['smtp_port'] ?? 587);
-        $user = trim($_POST['smtp_username'] ?? '');
+        $host = 'api.brevo.com';
+        $port = 443;
+        $user = 'brevo';
         $password = $_POST['smtp_password'] ?? '';
-        $encryption = $_POST['smtp_encryption'] ?? 'tls';
+        $encryption = 'https';
         $fromEmail = trim($_POST['from_email'] ?? '');
         $fromName = trim($_POST['from_name'] ?? '');
         
-        if (empty($host) || empty($user) || empty($fromEmail) || empty($fromName)) {
-            $error = 'SMTP Host, Username, From Email, and From Name are required.';
+        if (empty($password) && !($password === '••••••••')) {
+            $error = 'Brevo API Key is required.';
+        } elseif (empty($fromEmail) || empty($fromName)) {
+            $error = 'Sender From Email and Sender From Name are required.';
         } elseif (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
             $error = 'Invalid "From Email" address format.';
         } else {
@@ -35,16 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
                 // Check if setting already exists
                 $existing = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
                 
-                // Process Password
+                // Process Password (API Key)
                 if ($password === '••••••••' || empty($password)) {
-                    // Preserving existing password
+                    // Preserving existing key
                     if ($existing) {
                         $encryptedPassword = $existing['smtp_password'];
                     } else {
-                        $error = 'Please enter a password for the initial setup.';
+                        $error = 'Please enter a Brevo API Key for the initial setup.';
                     }
                 } else {
-                    // Encrypt password
+                    // Encrypt key
                     $encryptedPassword = encryptSMTPPassword($password);
                 }
                 
@@ -57,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
                         $stmt->execute([$host, $port, $user, $encryptedPassword, $encryption, $fromEmail, $fromName]);
                     }
                     
-                    $successMsg = 'SMTP configurations updated successfully.';
-                    logActivity('SMTP_SETTINGS_CHANGED', 'Updated SMTP server configurations.');
+                    $successMsg = 'Brevo API configurations updated successfully.';
+                    logActivity('SMTP_SETTINGS_CHANGED', 'Updated Brevo API configurations.');
                 }
             } catch (Exception $e) {
                 $error = 'Database update failed: ' . $e->getMessage();
@@ -82,10 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test'])) {
     }
     
     try {
-        // Fetch SMTP config from DB (or use submitted settings)
+        // Fetch config from DB
         $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
         if (!$smtp) {
-            jsonResponse(false, 'Please configure and save your SMTP settings first.');
+            jsonResponse(false, 'Please configure and save your Brevo API key first.');
         }
         
         // Fetch active template
@@ -143,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test'])) {
             logActivity('SMTP_SETTINGS_CHANGED', 'Sent a test email successfully to: ' . $testEmail);
             jsonResponse(true, 'Test email dispatched successfully! Please check your inbox.');
         } else {
-            jsonResponse(false, 'SMTP Dispatch Failed: ' . $res);
+            jsonResponse(false, 'Brevo Dispatch Failed: ' . $res);
         }
     } catch (Exception $e) {
         jsonResponse(false, 'System error: ' . $e->getMessage());
@@ -157,7 +159,7 @@ $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
 <div class="page-header">
     <div class="page-title">
         <h1>Email Settings</h1>
-        <p>Configure outgoing SMTP configurations and test connectivity.</p>
+        <p>Configure outgoing Brevo API credentials and test connectivity.</p>
     </div>
 </div>
 
@@ -176,52 +178,26 @@ $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
 <?php endif; ?>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-    <!-- SMTP Configuration Card -->
+    <!-- Brevo Configuration Card -->
     <div class="card">
-        <h2 style="font-size: 18px; margin-bottom: 20px; font-weight: 700;">SMTP Settings</h2>
+        <h2 style="font-size: 18px; margin-bottom: 20px; font-weight: 700;">Brevo API Settings</h2>
         
         <form method="POST">
             <?php csrfInput(); ?>
             
             <div class="form-group">
-                <label for="smtp_host">SMTP HOST</label>
-                <input type="text" id="smtp_host" name="smtp_host" class="form-control" required placeholder="e.g. mail.college.edu" 
-                       value="<?= isset($_POST['smtp_host']) ? e($_POST['smtp_host']) : ($smtp ? e($smtp['smtp_host']) : '') ?>">
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="smtp_port">SMTP PORT</label>
-                    <input type="number" id="smtp_port" name="smtp_port" class="form-control" required placeholder="e.g. 587" 
-                           value="<?= isset($_POST['smtp_port']) ? e($_POST['smtp_port']) : ($smtp ? e($smtp['smtp_port']) : '587') ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="smtp_encryption">ENCRYPTION TYPE</label>
-                    <select id="smtp_encryption" name="smtp_encryption" class="form-control">
-                        <option value="tls" <?= ($smtp && $smtp['smtp_encryption'] === 'tls') ? 'selected' : '' ?>>STARTTLS (Port 587 / 25)</option>
-                        <option value="ssl" <?= ($smtp && $smtp['smtp_encryption'] === 'ssl') ? 'selected' : '' ?>>SSL/TLS (Port 465)</option>
-                        <option value="none" <?= ($smtp && $smtp['smtp_encryption'] === 'none') ? 'selected' : '' ?>>None (Port 25)</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="smtp_username">SMTP USERNAME (EMAIL)</label>
-                <input type="text" id="smtp_username" name="smtp_username" class="form-control" required placeholder="e.g. hackmatrix@college.edu" 
-                       value="<?= isset($_POST['smtp_username']) ? e($_POST['smtp_username']) : ($smtp ? e($smtp['smtp_username']) : '') ?>">
-            </div>
-            
-            <div class="form-group">
-                <label for="smtp_password">SMTP PASSWORD</label>
-                <input type="password" id="smtp_password" name="smtp_password" class="form-control" required placeholder="••••••••" 
+                <label for="smtp_password">BREVO API KEY</label>
+                <input type="password" id="smtp_password" name="smtp_password" class="form-control" required placeholder="xkeysib-..." 
                        value="<?= $smtp ? '••••••••' : '' ?>">
+                <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">
+                    Generate this key in SMTP & API section of your Brevo Dashboard.
+                </small>
             </div>
             
             <div class="form-grid">
                 <div class="form-group">
                     <label for="from_email">SENDER FROM EMAIL</label>
-                    <input type="email" id="from_email" name="from_email" class="form-control" required placeholder="e.g. hackmatrix@college.edu" 
+                    <input type="email" id="from_email" name="from_email" class="form-control" required placeholder="e.g. hackmatrix@vignaniit.edu.in" 
                            value="<?= isset($_POST['from_email']) ? e($_POST['from_email']) : ($smtp ? e($smtp['from_email']) : '') ?>">
                 </div>
                 
@@ -239,7 +215,7 @@ $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
         </form>
     </div>
     
-    <!-- Test SMTP Connection Card -->
+    <!-- Test Connection Card -->
     <div class="card">
         <h2 style="font-size: 18px; margin-bottom: 20px; font-weight: 700;">Connection Test</h2>
         
@@ -247,7 +223,7 @@ $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
             <div style="background: rgba(8, 13, 26, 0.4); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                     <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Status:</span>
-                    <span style="font-size: 13px; color: var(--success); font-weight: 700;">SMTP Configurations Saved</span>
+                    <span style="font-size: 13px; color: var(--success); font-weight: 700;">Brevo API Configurations Saved</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Last Test Dispatched:</span>
@@ -267,7 +243,7 @@ $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
                 Send Test Email
             </button>
             
-            <!-- SMTP log debugger container -->
+            <!-- error debugger console -->
             <div id="smtpLogConsole" class="console" style="display: none; max-height: 200px; margin-top: 20px;">
                 <span class="tag tag-danger">ERROR</span>
                 <span id="smtpErrorDetails" style="white-space: pre-wrap;"></span>
@@ -277,7 +253,7 @@ $smtp = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
                 <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; stroke: rgba(255,255,255,0.1); fill: none; stroke-width: 1.5; margin-bottom: 16px;">
                     <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
                 </svg>
-                <p style="font-size: 14px; font-weight: 600;">SMTP Configurations Empty</p>
+                <p style="font-size: 14px; font-weight: 600;">Brevo Configurations Empty</p>
                 <p style="font-size: 12px; margin-top: 4px;">Fill and save the settings form on the left to configure.</p>
             </div>
         <?php endif; ?>
