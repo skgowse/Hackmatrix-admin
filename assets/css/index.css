@@ -742,6 +742,7 @@ select.form-control {
     body.sidebar-collapsed .main-content {
         margin-left: 0;
         padding-left: 80px;
+        max-width: 100%;
     }
     
     body.sidebar-collapsed .floating-menu-toggle {
