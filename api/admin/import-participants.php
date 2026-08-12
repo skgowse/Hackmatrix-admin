@@ -147,9 +147,9 @@ foreach ($rowsData as $index => $row) {
         $name = getVal($row, ["Member {$mNum} Name", "member_{$mNum}_name", "Member{$mNum}Name"]);
         $salutation = '';
         $email = strtolower(getVal($row, ["Member {$mNum} Email", "member_{$mNum}_email", "Member{$mNum}Email"]));
-        $mobile = preg_replace('/[^0-9]/', '', getVal($row, ["Member {$mNum} Mobile", "member_{$mNum}_mobile", "Member{$mNum}Mobile"]));
+        $mobile = '';
         $branch = strtoupper(getVal($row, ["Member {$mNum} Branch", "member_{$mNum}_branch", "Member{$mNum}Branch"]));
-        $year = getVal($row, ["Member {$mNum} Year", "member_{$mNum}_year", "Member{$mNum}Year"]);
+        $year = '';
         
         // Clean mobile number (last 10 digits)
         if (strlen($mobile) > 10) {
@@ -217,21 +217,7 @@ foreach ($rowsData as $index => $row) {
             break;
         }
         
-        // Mobile length
-        if (strlen($m['mobile']) !== 10) {
-            $errors[] = "Row $rowNum (Team '$teamName'): Mobile number for $roleName must be exactly 10 digits.";
-            $memberValidationError = true;
-            break;
-        }
         
-        // Mobile database uniqueness
-        $stmtCheckMobile = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE mobile = ?");
-        $stmtCheckMobile->execute([$m['mobile']]);
-        if ($stmtCheckMobile->fetchColumn() > 0) {
-            $errors[] = "Row $rowNum (Team '$teamName'): Mobile '{$m['mobile']}' for $roleName already exists in database.";
-            $memberValidationError = true;
-            break;
-        }
         
         // Branch validation
         $matchedBranch = '';
@@ -248,14 +234,7 @@ foreach ($rowsData as $index => $row) {
         }
         $members[$mIdx]['branch'] = $matchedBranch;
         
-        // Year validation
-        $yearVal = preg_replace('/[^0-9]/', '', $m['year']);
-        if (empty($yearVal) || $yearVal < 1 || $yearVal > 4) {
-            $errors[] = "Row $rowNum (Team '$teamName'): Academic year for $roleName must be 1, 2, 3, or 4.";
-            $memberValidationError = true;
-            break;
-        }
-        $members[$mIdx]['year'] = $yearVal;
+        $members[$mIdx]['year'] = '';
     }
     
     if ($memberValidationError) {

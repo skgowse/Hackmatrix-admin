@@ -56,11 +56,11 @@ $mobilesForm = [];
 foreach ($members as $index => $m) {
     $name = trim($m['name'] ?? '');
     $email = strtolower(trim($m['email'] ?? ''));
-    $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
+    $mobile = '';
     $branch = trim($m['branch'] ?? '');
-    $year = trim($m['year'] ?? '');
+    $year = '';
 
-    if (empty($name) || empty($email) || empty($mobile) || empty($branch) || empty($year)) {
+    if (empty($name) || empty($email) || empty($branch)) {
         jsonResponse(false, "All fields are required for Member $num ($roleName).");
     }
     
@@ -69,12 +69,7 @@ foreach ($members as $index => $m) {
         jsonResponse(false, "Member $num ($roleName): " . $emailValid);
     }
     
-    if (strlen($mobile) > 10) {
-        $mobile = substr($mobile, -10);
-    }
-    if (strlen($mobile) !== 10) {
-        jsonResponse(false, "Mobile number must be exactly 10 digits for Member $num.");
-    }
+
     
     // Check internal duplicates in form submission
     if (in_array($email, $emailsForm)) {
@@ -82,10 +77,7 @@ foreach ($members as $index => $m) {
     }
     $emailsForm[] = $email;
     
-    if (in_array($mobile, $mobilesForm)) {
-        jsonResponse(false, "Duplicate mobile number '$mobile' found within this team submission.");
-    }
-    $mobilesForm[] = $mobile;
+
 }
 
 // 5. Global Database Uniqueness Checks (Team Name, Email, Mobile)
@@ -106,14 +98,7 @@ try {
         jsonResponse(false, "The email '" . $dupEmails[0] . "' is already registered for HACKMATRIX 1.0.");
     }
     
-    // Check Mobiles Duplication
-    $mobilePlaceholders = implode(',', array_fill(0, count($mobilesForm), '?'));
-    $stmt = $pdo->prepare("SELECT mobile FROM team_members WHERE mobile IN ($mobilePlaceholders)");
-    $stmt->execute($mobilesForm);
-    $dupMobiles = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    if (!empty($dupMobiles)) {
-        jsonResponse(false, "The mobile number '" . $dupMobiles[0] . "' is already registered.");
-    }
+
 } catch (Exception $e) {
     jsonResponse(false, 'Validation failed: ' . $e->getMessage());
 }

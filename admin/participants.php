@@ -439,16 +439,6 @@ require_once __DIR__ . '/header.php';
                         <label style="font-size:10px;">Email Address</label>
                         <input type="email" name="members[${index}][email]" class="form-control" required value="${e(saved.email)}" ${disabled}>
                     </div>
-                    <div class="form-group">
-                        <label style="font-size:10px;">Mobile Number</label>
-                        <input type="text" name="members[${index}][mobile]" class="form-control member-mobile" required value="${mobVal}" ${disabled} pattern="\\+91[0-9]{10}" maxlength="13">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size:10px;">Year</label>
-                        <select name="members[${index}][year]" class="form-control" ${disabled}>
-                            ${yearOptions}
-                        </select>
-                    </div>
                     <div class="form-group" style="grid-column: 1 / -1; margin-top: 5px;">
                         <label style="font-size:10px;">Branch / Department</label>
                         <div style="display: flex; flex-wrap: wrap; gap: 4px 10px;">
@@ -461,20 +451,6 @@ require_once __DIR__ . '/header.php';
             membersContainer.appendChild(card);
         }
         
-        // Setup input helper for +91 country prefix
-        membersContainer.querySelectorAll('.member-mobile').forEach(input => {
-            input.addEventListener('input', function() {
-                let val = this.value;
-                if (!val.startsWith('+91')) {
-                    val = '+91' + val.replace(/\+91/g, '').replace(/[^0-9]/g, '');
-                } else {
-                    let rest = val.substring(3).replace(/[^0-9]/g, '');
-                    if (rest.length > 10) rest = rest.substring(0, 10);
-                    val = '+91' + rest;
-                }
-                this.value = val;
-            });
-        });
     }
     
     // Bind change listener to the team size selector inside modal
@@ -494,9 +470,9 @@ require_once __DIR__ . '/header.php';
                             salutation: '',
                             name: nameInput.value,
                             email: document.querySelector(`input[name="members[${i}][email]"]`).value,
-                            mobile: document.querySelector(`input[name="members[${i}][mobile]"]`).value,
+                            mobile: '',
                             branch: checkedBranch ? checkedBranch.value : '',
-                            year: document.querySelector(`select[name="members[${i}][year]"]`).value
+                            year: ''
                         };
                     }
                 }
@@ -692,18 +668,18 @@ require_once __DIR__ . '/header.php';
     function downloadImportTemplate() {
         const headers = [
             'Team Name', 'College', 'Domain',
-            'Member 1 Salutation', 'Member 1 Name', 'Member 1 Email', 'Member 1 Mobile', 'Member 1 Branch', 'Member 1 Year',
-            'Member 2 Salutation', 'Member 2 Name', 'Member 2 Email', 'Member 2 Mobile', 'Member 2 Branch', 'Member 2 Year',
-            'Member 3 Salutation', 'Member 3 Name', 'Member 3 Email', 'Member 3 Mobile', 'Member 3 Branch', 'Member 3 Year',
-            'Member 4 Salutation', 'Member 4 Name', 'Member 4 Email', 'Member 4 Mobile', 'Member 4 Branch', 'Member 4 Year'
+            'Member 1 Name', 'Member 1 Email', 'Member 1 Branch',
+            'Member 2 Name', 'Member 2 Email', 'Member 2 Branch',
+            'Member 3 Name', 'Member 3 Email', 'Member 3 Branch',
+            'Member 4 Name', 'Member 4 Email', 'Member 4 Branch'
         ];
         
         const rowSample1 = [
             'Code Wizards', 'VIIT', 'AI & ML',
-            'Mr.', 'John Doe', 'john.doe@gmail.com', '9876543210', 'CSE', '3',
-            'Miss.', 'Jane Smith', 'jane.smith@gmail.com', '9876543211', 'ECE', '3',
-            'Mr.', 'Bob Johnson', 'bob.johnson@gmail.com', '9876543212', 'IT', '3',
-            '', '', '', '', '', ''
+            'John Doe', 'john.doe@gmail.com', 'CSE',
+            'Jane Smith', 'jane.smith@gmail.com', 'ECE',
+            'Bob Johnson', 'bob.johnson@gmail.com', 'IT',
+            '', '', ''
         ];
         
         const csvContent = "data:text/csv;charset=utf-8," 

@@ -63,15 +63,15 @@ foreach ($members as $index => $m) {
     $mId = intval($m['id'] ?? 0);
     $name = trim($m['name'] ?? '');
     $email = strtolower(trim($m['email'] ?? ''));
-    $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
+    $mobile = '';
     $branch = trim($m['branch'] ?? '');
-    $year = trim($m['year'] ?? '');
+    $year = '';
     
     $num = $index + 1;
     $roleName = ($index === 0) ? 'Team Lead' : 'Member';
     
 
-    if (empty($name) || empty($email) || empty($mobile) || empty($branch) || empty($year)) {
+    if (empty($name) || empty($email) || empty($branch)) {
         jsonResponse(false, "All fields are required for Member $num ($roleName).");
     }
     
@@ -80,22 +80,7 @@ foreach ($members as $index => $m) {
         jsonResponse(false, "Member $num ($roleName): " . $emailValid);
     }
     
-    if (strlen($mobile) > 10) {
-        $mobile = substr($mobile, -10);
-    }
-    if (strlen($mobile) !== 10) {
-        jsonResponse(false, "Mobile number must be exactly 10 digits for Member $num.");
-    }
-    
-    if (in_array($email, $emailsForm)) {
-        jsonResponse(false, "Duplicate email address '$email' found within this team.");
-    }
-    $emailsForm[] = $email;
-    
-    if (in_array($mobile, $mobilesForm)) {
-        jsonResponse(false, "Duplicate mobile number '$mobile' found within this team.");
-    }
-    $mobilesForm[] = $mobile;
+
 }
 
 try {
@@ -120,10 +105,7 @@ try {
     foreach ($members as $index => $m) {
         $mId = intval($m['id'] ?? 0);
         $email = strtolower(trim($m['email'] ?? ''));
-        $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
-        if (strlen($mobile) > 10) {
-            $mobile = substr($mobile, -10);
-        }
+        $mobile = '';
         
         $num = $index + 1;
         
@@ -139,17 +121,7 @@ try {
             jsonResponse(false, "The email '$email' for Member $num is already registered by another participant.");
         }
         
-        // Check mobile database uniqueness
-        if ($mId > 0) {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE mobile = ? AND id != ?");
-            $stmt->execute([$mobile, $mId]);
-        } else {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM team_members WHERE mobile = ?");
-            $stmt->execute([$mobile]);
-        }
-        if ($stmt->fetchColumn() > 0) {
-            jsonResponse(false, "The mobile number '$mobile' for Member $num is already registered by another participant.");
-        }
+
     }
     
     // 5. Update Database within Transaction
@@ -175,12 +147,9 @@ try {
         $mId = intval($m['id'] ?? 0);
         $name = trim($m['name'] ?? '');
         $email = strtolower(trim($m['email'] ?? ''));
-        $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
-        if (strlen($mobile) > 10) {
-            $mobile = substr($mobile, -10);
-        }
+        $mobile = '';
         $branch = trim($m['branch'] ?? '');
-        $year = trim($m['year'] ?? '');
+        $year = '';
         $salutation = '';
         $role = ($index === 0) ? 'Team Lead' : 'Member';
         $memberCertId = $teamCode . "-" . ($index + 1);

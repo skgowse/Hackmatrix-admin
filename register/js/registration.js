@@ -109,23 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="text" name="members[${index}][name]" class="form-control member-name" placeholder="Enter full name" value="${saved.name}">
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group" style="grid-column: 1 / -1;">
                     <label>Email Address <span class="required">*</span></label>
                     <input type="email" name="members[${index}][email]" class="form-control member-email" placeholder="e.g. member${index+1}@gmail.com" value="${saved.email}">
                     <div class="validation-message member-email-msg"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Mobile Number <span class="required">*</span></label>
-                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="+91 XXXXXXXXXX" value="${saved.mobile || '+91'}" pattern="\\+91[0-9]{10}" maxlength="13">
-                    <div class="validation-message member-mobile-msg"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>Academic Year <span class="required">*</span></label>
-                    <select name="members[${index}][year]" class="form-control member-year">
-                        ${yearOptions}
-                    </select>
                 </div>
 
                 <div class="form-group" style="grid-column: 1 / -1; margin-top: 10px;">
@@ -148,8 +135,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupMemberListeners(card, index) {
         const emailInput = card.querySelector('.member-email');
         const emailMsg = card.querySelector('.member-email-msg');
-        const mobileInput = card.querySelector('.member-mobile');
-        const mobileMsg = card.querySelector('.member-mobile-msg');
 
         emailInput.addEventListener('input', debounce(function() {
             const email = this.value.trim().toLowerCase();
@@ -207,70 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         }));
 
-        mobileInput.addEventListener('input', debounce(function() {
-            let val = this.value;
-            if (!val.startsWith('+91')) {
-                val = '+91' + val.replace(/\+91/g, '').replace(/[^0-9]/g, '');
-            } else {
-                let rest = val.substring(3).replace(/[^0-9]/g, '');
-                if (rest.length > 10) rest = rest.substring(0, 10);
-                val = '+91' + rest;
-            }
-            this.value = val;
-
-            let mobile = val.substring(3);
-
-            if (mobile === '') {
-                mobileMsg.innerText = '';
-                validationStates.mobiles[index] = false;
-                refreshFormProgression();
-                return;
-            }
-
-            if (mobile.length !== 10) {
-                mobileMsg.className = 'validation-message invalid';
-                mobileMsg.innerText = 'Must be exactly 10 digits after +91.';
-                validationStates.mobiles[index] = false;
-                refreshFormProgression();
-                return;
-            }
-
-            // Check form duplicates
-            const allMobiles = Array.from(document.querySelectorAll('.member-mobile'))
-                                     .map(el => el.value.replace(/[^0-9]/g, '').slice(-10))
-                                     .filter(val => val !== '');
-            if (allMobiles.filter(val => val === mobile).length > 1) {
-                mobileMsg.className = 'validation-message invalid';
-                mobileMsg.innerText = 'This phone is entered twice on this form.';
-                validationStates.mobiles[index] = false;
-                refreshFormProgression();
-                return;
-            }
-
-            // AJAX Check
-            mobileMsg.className = 'validation-message checking';
-            mobileMsg.innerText = 'Verifying...';
-
-            fetch(`../../api/registration/check-mobile.php?mobile=${encodeURIComponent(mobile)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.available) {
-                        mobileMsg.className = 'validation-message valid';
-                        mobileMsg.innerText = '✓ Mobile number is available';
-                        validationStates.mobiles[index] = true;
-                    } else {
-                        mobileMsg.className = 'validation-message invalid';
-                        mobileMsg.innerText = '❌ ' + data.message;
-                        validationStates.mobiles[index] = false;
-                    }
-                    refreshFormProgression();
-                })
-                .catch(() => {
-                    mobileMsg.innerText = 'Offline validation skipped.';
-                    validationStates.mobiles[index] = true;
-                    refreshFormProgression();
-                });
-        }));
+        // Mobile listener removed
     }
 
     // Live validation for Team Name
@@ -384,8 +306,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const nameEl = card.querySelector('.member-name');
             const emailEl = card.querySelector('.member-email');
-            const mobileEl = card.querySelector('.member-mobile');
-            const yearEl = card.querySelector('.member-year');
             const branchRadioElements = card.querySelectorAll('.member-branch-radio');
 
             if (allowNextField) {
@@ -395,35 +315,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     emailEl.disabled = false;
                     
                     if (validationStates.emails[i] === true) {
-                        mobileEl.disabled = false;
+                        branchRadioElements.forEach(r => r.disabled = false);
                         
-                        if (validationStates.mobiles[i] === true) {
-                            yearEl.disabled = false;
-                            
-                            if (yearEl.value !== '') {
-                                branchRadioElements.forEach(r => r.disabled = false);
-                                
-                                const checkedBranch = card.querySelector('.member-branch-radio:checked');
-                                if (checkedBranch) {
-                                    allowNextField = true;
-                                } else {
-                                    allowNextField = false;
-                                }
-                            } else {
-                                branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
-                                allowNextField = false;
-                            }
+                        const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                        if (checkedBranch) {
+                            allowNextField = true;
                         } else {
-                            yearEl.disabled = true;
-                            yearEl.value = '';
-                            branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
                             allowNextField = false;
                         }
                     } else {
-                        mobileEl.disabled = true;
-                        mobileEl.value = '+91';
-                        yearEl.disabled = true;
-                        yearEl.value = '';
                         branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
                         allowNextField = false;
                     }
@@ -434,10 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (emailMsg) emailMsg.innerText = '';
                     validationStates.emails[i] = false;
 
-                    mobileEl.disabled = true;
-                    mobileEl.value = '+91';
-                    yearEl.disabled = true;
-                    yearEl.value = '';
                     branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
                     allowNextField = false;
                 }
@@ -450,10 +346,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (emailMsg) emailMsg.innerText = '';
                 validationStates.emails[i] = false;
 
-                mobileEl.disabled = true;
-                mobileEl.value = '+91';
-                yearEl.disabled = true;
-                yearEl.value = '';
                 branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
             }
         }
@@ -542,22 +434,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                const mobileVal = card.querySelector('.member-mobile').value.trim();
-                if (mobileVal === '' || mobileVal === '+91') {
-                    showToast(`Please enter the Mobile Number for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-mobile').focus();
-                    return;
-                }
-
                 const checkedBranch = card.querySelector('.member-branch-radio:checked');
                 if (!checkedBranch) {
                     showToast(`Please select a Branch for Member #${i+1}.`, 'warning');
-                    return;
-                }
-                const yearVal = card.querySelector('.member-year').value;
-                if (yearVal === '') {
-                    showToast(`Please select an Academic Year for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-year').focus();
                     return;
                 }
             }
@@ -565,11 +444,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!validationStates.emails[i]) {
                 showToast(`Please verify the email address for Member #${i+1}.`, 'warning');
                 document.querySelector(`.member-card[data-index="${i}"] .member-email`).focus();
-                return;
-            }
-            if (!validationStates.mobiles[i]) {
-                showToast(`Please verify the mobile number for Member #${i+1}.`, 'warning');
-                document.querySelector(`.member-card[data-index="${i}"] .member-mobile`).focus();
                 return;
             }
         }
