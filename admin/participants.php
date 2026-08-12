@@ -110,6 +110,10 @@ require_once __DIR__ . '/header.php';
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Export Excel
         </button>
+        <button onclick="deleteAllParticipants()" class="btn btn-secondary" style="border-color: #ef4444; color: #ef4444;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Delete All
+        </button>
     </div>
 </div>
 
@@ -779,6 +783,33 @@ require_once __DIR__ . '/header.php';
             importSubmitBtn.disabled = false;
             importSubmitBtn.innerText = 'Start Import';
         });
+    }
+
+    function deleteAllParticipants() {
+        if (confirm("Are you absolutely sure you want to delete ALL teams and participants? This action will permanently erase all registrations, certificates, and email logs, and CANNOT be undone.")) {
+            const doubleCheck = prompt("To confirm deletion, please type 'DELETE ALL' below:");
+            if (doubleCheck === 'DELETE ALL') {
+                showToast('Processing request, please wait...', 'warning');
+                fetch('../api/admin/delete-all-participants.php', {
+                    method: 'POST'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showToast(data.message || 'Failed to delete data.', 'danger');
+                    }
+                })
+                .catch(err => {
+                    showToast('Connection error occurred.', 'danger');
+                    console.error(err);
+                });
+            } else if (doubleCheck !== null) {
+                showToast('Deletion cancelled. Confirmation text did not match.', 'danger');
+            }
+        }
     }
 
     // Utility string HTML escaper
