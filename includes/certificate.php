@@ -140,6 +140,9 @@ class CertificateGenerator {
         if ($salutation !== '') {
             $nameText = $salutation . ' ' . $nameText;
         }
+        if ($nameText !== '') {
+            $nameText .= ',';
+        }
         
         // Format branch to professional representation
         $branchText = trim($participant['branch']);
