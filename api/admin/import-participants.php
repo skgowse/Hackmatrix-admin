@@ -63,7 +63,17 @@ try {
         $worksheet = $spreadsheet->getActiveSheet();
         $rows = $worksheet->toArray();
         if (count($rows) > 0) {
-            $headers = array_map(function($h) { return strtolower(trim($h ?? '')); }, $rows[0]);
+            $rawHeaders = $rows[0];
+            $headers = [];
+            foreach ($rawHeaders as $index => $h) {
+                $h = trim($h ?? '');
+                if ($h === '') {
+                    if ($index === 0) $h = 'team_name';
+                    elseif ($index === 1) $h = 'member_1_name';
+                    elseif ($index === 2) $h = 'member_1_email';
+                }
+                $headers[$index] = strtolower($h);
+            }
             for ($i = 1; $i < count($rows); $i++) {
                 $data = $rows[$i];
                 // Skip completely empty rows
@@ -71,9 +81,7 @@ try {
                 
                 $rowData = [];
                 foreach ($headers as $index => $header) {
-                    if ($header !== '') {
-                        $rowData[$header] = trim($data[$index] ?? '');
-                    }
+                    $rowData[$header] = trim($data[$index] ?? '');
                 }
                 $rowsData[] = $rowData;
             }
@@ -115,8 +123,16 @@ foreach ($rowsData as $index => $row) {
     $rowNum = $index + 2; // Row number in spreadsheet (1-indexed + header row)
     
     $teamName = getVal($row, ['Team Name', 'TeamName', 'team_name']);
+    
     $college = strtoupper(getVal($row, ['College', 'college', 'institution', 'College/Institution']));
+    if (empty($college)) {
+        $college = 'VIIT'; // Default to VIIT
+    }
+    
     $domain = getVal($row, ['Domain', 'domain', 'Hackathon Domain', 'hackathon_domain']);
+    if (empty($domain)) {
+        $domain = 'AI & ML'; // Default to AI & ML
+    }
     
     if (empty($teamName)) {
         $errors[] = "Row $rowNum: Team Name is missing.";
@@ -144,23 +160,27 @@ foreach ($rowsData as $index => $row) {
     // Read members
     $members = [];
     for ($mNum = 1; $mNum <= 4; $mNum++) {
-        $name = getVal($row, ["Member {$mNum} Name", "member_{$mNum}_name", "Member{$mNum}Name"]);
-        $salutation = '';
-        $email = strtolower(getVal($row, ["Member {$mNum} Email", "member_{$mNum}_email", "Member{$mNum}Email"]));
-        $mobile = '';
-        $branch = strtoupper(getVal($row, ["Member {$mNum} Branch", "member_{$mNum}_branch", "Member{$mNum}Branch"]));
-        $year = '';
-        
-        // Clean mobile number (last 10 digits)
-        if (strlen($mobile) > 10) {
-            $mobile = substr($mobile, -10);
+        if ($mNum === 1) {
+            $name = getVal($row, ["Member 1 Name", "member_1_name", "Member1Name", "Team Lead Name", "teamleadname"]);
+            $salutation = '';
+            $email = strtolower(getVal($row, ["Member 1 Email", "member_1_email", "Member1Email", "Team Lead Email", "teamleademail", "Team Lead Mail Id", "teamleadmailid"]));
+            $mobile = '';
+            $branch = strtoupper(getVal($row, ["Member 1 Branch", "member_1_branch", "Member1Branch", "Team Lead Branch", "teamleadbranch"]));
+            $year = '';
+        } else {
+            $name = getVal($row, ["Member {$mNum} Name", "member_{$mNum}_name", "Member{$mNum}Name", "Team Member {$mNum} Name", "teammember{$mNum}name", "Team member {$mNum} name"]);
+            $salutation = '';
+            $email = strtolower(getVal($row, ["Member {$mNum} Email", "member_{$mNum}_email", "Member{$mNum}Email", "Team Member {$mNum} Email", "teammember{$mNum}email", "Team Member {$mNum} Mail Id", "teammember{$mNum}mailid", "Team Member {$mNum} MailId"]));
+            $mobile = '';
+            $branch = strtoupper(getVal($row, ["Member {$mNum} Branch", "member_{$mNum}_branch", "Member{$mNum}Branch", "Team Member {$mNum} Branch", "teammember{$mNum}branch"]));
+            $year = '';
         }
         
         // Correct branch naming typo
         if ($branch === 'AIDS') $branch = 'AI&DS';
         if ($branch === 'AIML') $branch = 'AI&ML';
         
-        if (!empty($name) || !empty($email) || !empty($mobile)) {
+        if (!empty($name) || !empty($email) || !empty($branch)) {
             $members[] = [
                 'name' => $name,
                 'salutation' => $salutation,
