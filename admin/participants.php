@@ -665,12 +665,29 @@ require_once __DIR__ . '/header.php';
 
     // Import modal handlers
     function openImportModal() {
-        importForm.reset();
-        importResults.style.display = 'none';
-        importResults.innerHTML = '';
-        importSubmitBtn.disabled = false;
-        importSubmitBtn.innerText = 'Start Import';
-        importModal.style.display = 'flex';
+        console.log("openImportModal triggered");
+        try {
+            if (!importForm) {
+                console.error("importForm element not found in DOM");
+                showToast("Import form element not found.", "danger");
+                return;
+            }
+            if (!importModal) {
+                console.error("importModal element not found in DOM");
+                showToast("Import modal element not found.", "danger");
+                return;
+            }
+            importForm.reset();
+            importResults.style.display = 'none';
+            importResults.innerHTML = '';
+            importSubmitBtn.disabled = false;
+            importSubmitBtn.innerText = 'Start Import';
+            importModal.style.display = 'flex';
+            console.log("importModal displayed successfully");
+        } catch (err) {
+            console.error("Error in openImportModal:", err);
+            alert("Error opening modal: " + err.message);
+        }
     }
 
     function closeImportModal() {
