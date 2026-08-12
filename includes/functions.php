@@ -161,18 +161,27 @@ function validateEmailStrongly($email) {
     $typos = [
         'gamil.com' => 'gmail.com',
         'gnail.com' => 'gmail.com',
+        'gmsil.com' => 'gmail.com',
+        'gmial.com' => 'gmail.com',
         'gmaill.com' => 'gmail.com',
         'gmal.com' => 'gmail.com',
         'gmil.com' => 'gmail.com',
         'gail.com' => 'gmail.com',
         'gmeil.com' => 'gmail.com',
+        'gmaile.com' => 'gmail.com',
+        'gmail.co' => 'gmail.com',
+        'gamil.co' => 'gmail.com',
+        'gnail.co' => 'gmail.com',
+        'gmsil.co' => 'gmail.com',
         'yahooo.com' => 'yahoo.com',
         'yaho.com' => 'yahoo.com',
         'yahu.com' => 'yahoo.com',
+        'yhoo.com' => 'yahoo.com',
         'outlok.com' => 'outlook.com',
         'outloo.com' => 'outlook.com',
         'hotmale.com' => 'hotmail.com',
-        'hotmial.com' => 'hotmail.com'
+        'hotmial.com' => 'hotmail.com',
+        'hotmil.com' => 'hotmail.com'
     ];
     
     if (array_key_exists($domain, $typos)) {
