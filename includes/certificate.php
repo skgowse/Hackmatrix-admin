@@ -164,7 +164,15 @@ class CertificateGenerator {
         $branchText = isset($branchMap[$branchAbbr]) ? $branchMap[$branchAbbr] : $branchAbbr;
 
         // 1. Draw Candidate Name
+        $nameSize = max($nameSize, 22);
+        $maxNameWidth = 85.0;
+        
         $pdf->SetFont($nameFont, $nameStyle, $nameSize);
+        while ($pdf->GetStringWidth($nameText) > $maxNameWidth && $nameSize > 8) {
+            $nameSize -= 0.5;
+            $pdf->SetFont($nameFont, $nameStyle, $nameSize);
+        }
+        
         $pdf->SetTextColor($nr, $ng, $nb);
         $cellHeight = $nameSize * 0.45;
         $nameWidth = $pdf->GetStringWidth($nameText);
@@ -180,14 +188,15 @@ class CertificateGenerator {
         }
 
         // 2. Draw Branch / Department
-        $charCount = strlen($branchText);
-        if ($charCount > 35) {
-            $branchSize = $branchSize * 0.60;
-        } elseif ($charCount > 20) {
-            $branchSize = $branchSize * 0.75;
-        }
+        $branchSize = max($branchSize, 20);
+        $maxBranchWidth = 85.0;
         
         $pdf->SetFont($branchFont, $branchStyle, $branchSize);
+        while ($pdf->GetStringWidth($branchText) > $maxBranchWidth && $branchSize > 8) {
+            $branchSize -= 0.5;
+            $pdf->SetFont($branchFont, $branchStyle, $branchSize);
+        }
+        
         $pdf->SetTextColor($br, $bg, $bb);
         $branchCellHeight = $branchSize * 0.45;
         $branchWidth = $pdf->GetStringWidth($branchText);
