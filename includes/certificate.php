@@ -144,13 +144,24 @@ class CertificateGenerator {
             $nameText .= ',';
         }
         
-        // Format branch to professional representation
-        $branchText = trim($participant['branch']);
-        if (strlen($branchText) <= 5) {
-            $branchText = strtoupper($branchText);
-        } elseif (strtolower($branchText) === $branchText || strtoupper($branchText) === $branchText) {
-            $branchText = ucwords(strtolower($branchText));
-        }
+        // Format branch to full name representation
+        $branchAbbr = trim($participant['branch']);
+        $branchMap = [
+            'AI&DS'   => 'Artificial Intelligence & Data Science',
+            'AI&ML'   => 'Artificial Intelligence & Machine Learning',
+            'CIVIL'   => 'Civil Engineering',
+            'CSE'     => 'Computer Science & Engineering',
+            'CSE-AI'  => 'Computer Science & Engineering (Artificial Intelligence)',
+            'CSE-CS'  => 'Computer Science & Engineering (Cyber Security)',
+            'CSE-DS'  => 'Computer Science & Engineering (Data Science)',
+            'ECE'     => 'Electronics & Communication Engineering',
+            'ECM'     => 'Electronics & Computer Engineering',
+            'EEE'     => 'Electrical & Electronics Engineering',
+            'IT'      => 'Information Technology',
+            'MECH'    => 'Mechanical Engineering'
+        ];
+        
+        $branchText = isset($branchMap[$branchAbbr]) ? $branchMap[$branchAbbr] : $branchAbbr;
 
         // 1. Draw Candidate Name
         $pdf->SetFont($nameFont, $nameStyle, $nameSize);
