@@ -21,7 +21,8 @@ class MailerHelper {
             '{{branch}}'           => $participant['branch'],
             '{{team_name}}'        => $participant['team_name'] ?? '',
             '{{team_no}}'          => $participant['team_no'] ?? '',
-            '{{certificate_id}}'   => $participant['certificate_id']
+            '{{certificate_id}}'   => $participant['certificate_id'],
+            '{{project_title}}'    => $participant['project_title'] ?? ''
         ];
         
         return str_replace(array_keys($placeholders), array_values($placeholders), $text);

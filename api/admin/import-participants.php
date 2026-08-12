@@ -286,8 +286,8 @@ foreach ($rowsData as $index => $row) {
             $stmtCert->execute([$memberDbId, $memberCertId]);
             
             // Queue email logs
-            $stmtMail = $pdo->prepare("INSERT INTO email_logs (participant_id, certificate_id, email, status) VALUES (?, ?, ?, 'PENDING')");
-            $stmtMail->execute([$memberDbId, $memberCertId, $m['email']]);
+            $stmtMail = $pdo->prepare("INSERT INTO email_logs (participant_id, certificate_id, certificate_file, email, recipient_name, status, attempt_count) VALUES (?, ?, '', ?, ?, 'PENDING', 0)");
+            $stmtMail->execute([$memberDbId, $memberCertId, $m['email'], $m['name']]);
         }
         
         // Audit log

@@ -79,6 +79,7 @@ if (isset($_POST['run_setup'])) {
                 tm.email AS email,
                 tm.certificate_id AS certificate_id,
                 tm.salutation AS salutation,
+                t.project_title AS project_title,
                 tm.created_at AS created_at,
                 tm.updated_at AS updated_at
             FROM team_members tm
@@ -143,11 +144,15 @@ if (isset($_POST['run_setup'])) {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 participant_id INT NOT NULL,
                 certificate_id VARCHAR(50) NOT NULL,
+                certificate_file VARCHAR(255) DEFAULT NULL,
                 email VARCHAR(100) NOT NULL,
+                recipient_name VARCHAR(100) DEFAULT NULL,
                 status ENUM('PENDING', 'SENDING', 'SENT', 'FAILED') DEFAULT 'PENDING',
                 sent_at TIMESTAMP NULL DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 error_message TEXT NULL,
                 retry_count INT DEFAULT 0,
+                attempt_count INT DEFAULT 0,
                 FOREIGN KEY (participant_id) REFERENCES team_members(id) ON DELETE CASCADE,
                 INDEX idx_status (status)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",

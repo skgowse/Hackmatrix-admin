@@ -169,9 +169,9 @@ try {
                 $mId
             ]);
             
-            // Sync email logs if email changed
-            $stmtSync = $pdo->prepare("UPDATE email_logs SET email = ? WHERE participant_id = ?");
-            $stmtSync->execute([$email, $mId]);
+            // Sync email logs if email or name changed
+            $stmtSync = $pdo->prepare("UPDATE email_logs SET email = ?, recipient_name = ? WHERE participant_id = ?");
+            $stmtSync->execute([$email, $name, $mId]);
             
             $submittedMemberIds[] = $mId;
         } else {
@@ -194,8 +194,8 @@ try {
             $stmtCert = $pdo->prepare("INSERT INTO certificates (participant_id, certificate_id, file_path, status) VALUES (?, ?, '', 'PENDING')");
             $stmtCert->execute([$newMemberId, $memberCertId]);
             
-            $stmtMail = $pdo->prepare("INSERT INTO email_logs (participant_id, certificate_id, email, status) VALUES (?, ?, ?, 'PENDING')");
-            $stmtMail->execute([$newMemberId, $memberCertId, $email]);
+            $stmtMail = $pdo->prepare("INSERT INTO email_logs (participant_id, certificate_id, certificate_file, email, recipient_name, status, attempt_count) VALUES (?, ?, '', ?, ?, 'PENDING', 0)");
+            $stmtMail->execute([$newMemberId, $memberCertId, $email, $name]);
             
             $submittedMemberIds[] = $newMemberId;
         }

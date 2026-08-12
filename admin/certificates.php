@@ -74,6 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $update = $pdo->prepare("UPDATE certificates SET status = 'GENERATED', file_path = ?, generated_at = NOW() WHERE participant_id = ?");
                         $update->execute(['certificates/' . $filename, $id]);
                         
+                        $updateMail = $pdo->prepare("UPDATE email_logs SET certificate_file = ? WHERE participant_id = ?");
+                        $updateMail->execute(['certificates/' . $filename, $id]);
+                        
                         $successCount++;
                     } else {
                         throw new Exception("PDF generator returned false");
@@ -126,6 +129,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $failedCount = 0;
         
         foreach ($batch as $id) {
+            // Check existing email status
+            $stmtEmail = $pdo->prepare("SELECT status FROM email_logs WHERE participant_id = ?");
+            $stmtEmail->execute([$id]);
+            $emailStatus = $stmtEmail->fetchColumn();
+            
+            if ($emailStatus === 'SENT') {
+                $successCount++;
+                continue;
+            }
+
             // Get participant details
             $stmt = $pdo->prepare("SELECT * FROM participants WHERE id = ?");
             $stmt->execute([$id]);
@@ -155,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $successCount++;
                     } else {
                         // SMTP Error
-                        $upd = $pdo->prepare("UPDATE email_logs SET status = 'FAILED', error_message = ?, retry_count = retry_count + 1 WHERE participant_id = ?");
+                        $upd = $pdo->prepare("UPDATE email_logs SET status = 'FAILED', error_message = ?, retry_count = retry_count + 1, attempt_count = attempt_count + 1 WHERE participant_id = ?");
                         $upd->execute([$result, $id]);
                         
                         logActivity('EMAIL_FAILED', "Failed email to: " . $participant['email'] . " - Error: " . $result);
@@ -164,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 } else {
                     // File missing
                     $errorMsg = "PDF certificate file not found on disk.";
-                    $upd = $pdo->prepare("UPDATE email_logs SET status = 'FAILED', error_message = ? WHERE participant_id = ?");
+                    $upd = $pdo->prepare("UPDATE email_logs SET status = 'FAILED', error_message = ?, attempt_count = attempt_count + 1 WHERE participant_id = ?");
                     $upd->execute([$errorMsg, $id]);
                     
                     logActivity('EMAIL_FAILED', "Missing PDF file for participant ID: " . $id);
@@ -172,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
             } else {
                 $errorMsg = "Certificate is not generated yet.";
-                $upd = $pdo->prepare("UPDATE email_logs SET status = 'FAILED', error_message = ? WHERE participant_id = ?");
+                $upd = $pdo->prepare("UPDATE email_logs SET status = 'FAILED', error_message = ?, attempt_count = attempt_count + 1 WHERE participant_id = ?");
                 $upd->execute([$errorMsg, $id]);
                 $failedCount++;
             }
@@ -296,7 +309,7 @@ $tab = $_GET['tab'] ?? 'generate'; // 'generate' or 'send'
 $search = trim($_GET['search'] ?? '');
 $filterStatus = $_GET['status'] ?? ''; // Generated status or Email status
 
-$queryStr = "SELECT p.*, c.status AS cert_status, c.id AS cert_tbl_id, e.status AS email_status 
+$queryStr = "SELECT p.*, c.status AS cert_status, c.id AS cert_tbl_id, e.status AS email_status, e.error_message 
              FROM participants p 
              LEFT JOIN certificates c ON p.id = c.participant_id 
              LEFT JOIN email_logs e ON p.id = e.participant_id 
@@ -632,20 +645,25 @@ $candidatesList = $stmt->fetchAll();
                                     <td style="font-family: var(--font-mono); font-weight: 700;"><?= e($c['certificate_id']) ?></td>
                                     <td>
                                         <?php if ($c['cert_status'] === 'GENERATED'): ?>
-                                            <span style="font-size: 13px; color: var(--success); font-weight: 600;">&#10003; Ready</span>
+                                            <span style="font-size: 13px; color: var(--success); font-weight: 600;">&#10003; Certificate Generated</span>
                                         <?php else: ?>
                                             <span style="font-size: 13px; color: var(--warning);">File Not Compiled</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($c['email_status'] === 'SENT'): ?>
-                                            <span class="badge badge-success">Sent</span>
+                                            <span class="badge badge-success">Email Sent</span>
                                         <?php elseif ($c['email_status'] === 'FAILED'): ?>
-                                            <span class="badge badge-danger">Failed</span>
+                                            <span class="badge badge-danger" title="<?= e($c['error_message']) ?>">Email Failed</span>
+                                            <?php if (!empty($c['error_message'])): ?>
+                                                <div style="font-size: 10px; color: var(--danger); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= e($c['error_message']) ?>">
+                                                    <?= e($c['error_message']) ?>
+                                                </div>
+                                            <?php endif; ?>
                                         <?php elseif ($c['email_status'] === 'SENDING'): ?>
                                             <span class="badge badge-info">Sending</span>
                                         <?php else: ?>
-                                            <span class="badge badge-warning">Pending</span>
+                                            <span class="badge badge-warning">Email Pending</span>
                                         <?php endif; ?>
                                     </td>
                                     <td style="text-align: right;">
