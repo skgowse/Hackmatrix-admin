@@ -129,7 +129,7 @@ foreach ($rowsData as $index => $row) {
         $college = 'VIIT'; // Default to VIIT
     }
     
-    $domain = getVal($row, ['Domain', 'domain', 'Hackathon Domain', 'hackathon_domain']);
+    $domain = getVal($row, ['Domain', 'domain', 'Hackathon Domain', 'hackathon_domain', 'Theme', 'theme', 'Hackathon Theme', 'hackathon_theme']);
     if (empty($domain)) {
         $domain = 'AI & ML'; // Default to AI & ML
     }
