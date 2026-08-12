@@ -152,7 +152,7 @@ class CertificateGenerator {
         }
 
         // 1. Draw Candidate Name
-        $nameSize = max($nameSize, 22);
+        $nameStyle = ''; // Force regular/normal font style so names are lighter and blend cleanly
         $maxNameWidth = 85.0;
         
         $pdf->SetFont($nameFont, $nameStyle, $nameSize);
@@ -177,13 +177,12 @@ class CertificateGenerator {
 
         // 2. Draw Branch / Department (Overwritten with Name font style, color and size)
         $branchFont = $nameFont;
-        $branchStyle = $nameStyle;
+        $branchStyle = $nameStyle; // adopts normal style
         $branchSize = $nameSize;
         $br = $nr;
         $bg = $ng;
         $bb = $nb;
         
-        $branchSize = max($branchSize, 20);
         $maxBranchWidth = 85.0;
         
         $pdf->SetFont($branchFont, $branchStyle, $branchSize);
