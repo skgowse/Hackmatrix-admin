@@ -555,6 +555,7 @@ require_once __DIR__ . '/header.php';
         existingMembersData = [];
         renderModalMembers(3);
         teamModal.style.display = 'flex';
+        teamModal.classList.add('active');
     }
 
     // Load data from server API
@@ -574,6 +575,7 @@ require_once __DIR__ . '/header.php';
                     existingMembersData = data.members;
                     renderModalMembers(parseInt(data.team.team_size));
                     teamModal.style.display = 'flex';
+                    teamModal.classList.add('active');
                 } else {
                     showToast(data.message, 'danger');
                 }
@@ -590,6 +592,7 @@ require_once __DIR__ . '/header.php';
 
     function closeModal() {
         teamModal.style.display = 'none';
+        teamModal.classList.remove('active');
     }
 
     // Form Submission (Add or Update)
@@ -683,6 +686,7 @@ require_once __DIR__ . '/header.php';
             importSubmitBtn.disabled = false;
             importSubmitBtn.innerText = 'Start Import';
             importModal.style.display = 'flex';
+            importModal.classList.add('active');
             console.log("importModal displayed successfully");
         } catch (err) {
             console.error("Error in openImportModal:", err);
@@ -692,6 +696,7 @@ require_once __DIR__ . '/header.php';
 
     function closeImportModal() {
         importModal.style.display = 'none';
+        importModal.classList.remove('active');
     }
 
     function downloadImportTemplate() {
