@@ -137,27 +137,19 @@ class CertificateGenerator {
         }
         
         if ($nameText !== '') {
-            $nameText .= ',';
+            $nameText .= ' ,';
         }
         
-        // Format branch to full name representation
+        // Format branch to short name only and add college name
         $branchAbbr = trim($participant['branch']);
-        $branchMap = [
-            'AI&DS'   => 'Artificial Intelligence & Data Science',
-            'AI&ML'   => 'Artificial Intelligence & Machine Learning',
-            'CIVIL'   => 'Civil Engineering',
-            'CSE'     => 'Computer Science & Engineering',
-            'CSE-AI'  => 'Computer Science & Engineering (Artificial Intelligence)',
-            'CSE-CS'  => 'Computer Science & Engineering (Cyber Security)',
-            'CSE-DS'  => 'Computer Science & Engineering (Data Science)',
-            'ECE'     => 'Electronics & Communication Engineering',
-            'ECM'     => 'Electronics & Computer Engineering',
-            'EEE'     => 'Electrical & Electronics Engineering',
-            'IT'      => 'Information Technology',
-            'MECH'    => 'Mechanical Engineering'
-        ];
-        
-        $branchText = isset($branchMap[$branchAbbr]) ? $branchMap[$branchAbbr] : $branchAbbr;
+        $college = trim($participant['college'] ?? '');
+        $branchText = $branchAbbr;
+        if ($branchText !== '') {
+            $branchText .= ' ,';
+            if ($college !== '') {
+                $branchText .= ' ' . $college;
+            }
+        }
 
         // 1. Draw Candidate Name
         $nameSize = max($nameSize, 22);
@@ -183,7 +175,14 @@ class CertificateGenerator {
             $pdf->Cell($nameWidth, $cellHeight, $nameText, 0, 0, 'L');
         }
 
-        // 2. Draw Branch / Department
+        // 2. Draw Branch / Department (Overwritten with Name font style, color and size)
+        $branchFont = $nameFont;
+        $branchStyle = $nameStyle;
+        $branchSize = $nameSize;
+        $br = $nr;
+        $bg = $ng;
+        $bb = $nb;
+        
         $branchSize = max($branchSize, 20);
         $maxBranchWidth = 85.0;
         

@@ -74,6 +74,7 @@ if (isset($_POST['run_setup'])) {
                 tm.id AS id,
                 t.team_id AS team_no,
                 t.team_name AS team_name,
+                t.college AS college,
                 tm.name AS participant_name,
                 tm.branch AS branch,
                 tm.email AS email,
