@@ -328,7 +328,7 @@ require_once __DIR__ . '/header.php';
     
     // Options
     const years = ['1', '2', '3', '4'];
-    const branches = ['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'];
+    const branches = ['AI&DS', 'AI&ML', 'CIVIL', 'CSE', 'CSE-AI', 'CSE-CS', 'CSE-DS', 'ECE', 'ECM', 'EEE', 'IT', 'MECH'];
 
     // Render forms inside the modal based on size selection
     function renderModalMembers(size) {

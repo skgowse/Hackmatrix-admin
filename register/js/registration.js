@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Predefined lists
-    const branches = ['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'];
+    const branches = ['AI&DS', 'AI&ML', 'CIVIL', 'CSE', 'CSE-AI', 'CSE-CS', 'CSE-DS', 'ECE', 'ECM', 'EEE', 'IT', 'MECH'];
     const years = [
         { val: '1', label: '1st Year' },
         { val: '2', label: '2nd Year' },
