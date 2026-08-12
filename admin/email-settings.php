@@ -3,82 +3,22 @@
  * HackMatrix 1.0 - Brevo API Configurations & Test Email Dispatch
  */
 
-require_once __DIR__ . '/header.php';
-require_once __DIR__ . '/../includes/certificate.php';
-require_once __DIR__ . '/../includes/mailer.php';
-
-$pdo = getDBConnection();
-$error = '';
-$successMsg = '';
-
-// Handle Settings Save
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
-    $csrfToken = $_POST['csrf_token'] ?? '';
-    
-    if (!validateCSRFToken($csrfToken)) {
-        $error = 'Invalid security token (CSRF failure).';
-    } else {
-        $host = 'api.brevo.com';
-        $port = 443;
-        $user = 'brevo';
-        $password = $_POST['smtp_password'] ?? '';
-        $encryption = 'https';
-        $fromEmail = trim($_POST['from_email'] ?? '');
-        $fromName = trim($_POST['from_name'] ?? '');
-        
-        if (empty($password) && !($password === '••••••••')) {
-            $error = 'Brevo API Key is required.';
-        } elseif (empty($fromEmail) || empty($fromName)) {
-            $error = 'Sender From Email and Sender From Name are required.';
-        } elseif (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Invalid "From Email" address format.';
-        } else {
-            try {
-                // Check if setting already exists
-                $existing = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
-                
-                // Process Password (API Key)
-                if ($password === '••••••••' || empty($password)) {
-                    // Preserving existing key
-                    if ($existing) {
-                        $encryptedPassword = $existing['smtp_password'];
-                    } else {
-                        $error = 'Please enter a Brevo API Key for the initial setup.';
-                    }
-                } else {
-                    // Encrypt key
-                    $encryptedPassword = encryptSMTPPassword($password);
-                }
-                
-                if (empty($error)) {
-                    if ($existing) {
-                        $stmt = $pdo->prepare("UPDATE smtp_settings SET smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, smtp_encryption = ?, from_email = ?, from_name = ? WHERE id = ?");
-                        $stmt->execute([$host, $port, $user, $encryptedPassword, $encryption, $fromEmail, $fromName, $existing['id']]);
-                    } else {
-                        $stmt = $pdo->prepare("INSERT INTO smtp_settings (smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, from_email, from_name) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                        $stmt->execute([$host, $port, $user, $encryptedPassword, $encryption, $fromEmail, $fromName]);
-                    }
-                    
-                    $successMsg = 'Brevo API configurations updated successfully.';
-                    logActivity('SMTP_SETTINGS_CHANGED', 'Updated Brevo API configurations.');
-                }
-            } catch (Exception $e) {
-                $error = 'Database update failed: ' . $e->getMessage();
-            }
-        }
-    }
-}
-
-// Handle Send Test Email
+// Handle Send Test Email (Intercept before header.php is loaded to output clean JSON)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test'])) {
-    $csrfToken = $_POST['csrf_token'] ?? '';
+    require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/../includes/auth.php';
+    require_once __DIR__ . '/../includes/functions.php';
+    require_once __DIR__ . '/../includes/certificate.php';
+    require_once __DIR__ . '/../includes/mailer.php';
     
+    $pdo = getDBConnection();
+    
+    $csrfToken = $_POST['csrf_token'] ?? '';
     if (!validateCSRFToken($csrfToken)) {
         jsonResponse(false, 'Invalid security token (CSRF failure).');
     }
     
     $testEmail = trim($_POST['test_email'] ?? '');
-    
     if (empty($testEmail) || !filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
         jsonResponse(false, 'Please provide a valid test email address.');
     }
@@ -149,6 +89,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_test'])) {
         }
     } catch (Exception $e) {
         jsonResponse(false, 'System error: ' . $e->getMessage());
+    }
+}
+
+require_once __DIR__ . '/header.php';
+require_once __DIR__ . '/../includes/certificate.php';
+require_once __DIR__ . '/../includes/mailer.php';
+
+$pdo = getDBConnection();
+$error = '';
+$successMsg = '';
+
+// Handle Settings Save
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    
+    if (!validateCSRFToken($csrfToken)) {
+        $error = 'Invalid security token (CSRF failure).';
+    } else {
+        $host = 'api.brevo.com';
+        $port = 443;
+        $user = 'brevo';
+        $password = $_POST['smtp_password'] ?? '';
+        $encryption = 'https';
+        $fromEmail = trim($_POST['from_email'] ?? '');
+        $fromName = trim($_POST['from_name'] ?? '');
+        
+        if (empty($password) && !($password === '••••••••')) {
+            $error = 'Brevo API Key is required.';
+        } elseif (empty($fromEmail) || empty($fromName)) {
+            $error = 'Sender From Email and Sender From Name are required.';
+        } elseif (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Invalid "From Email" address format.';
+        } else {
+            try {
+                // Check if setting already exists
+                $existing = $pdo->query("SELECT * FROM smtp_settings LIMIT 1")->fetch();
+                
+                // Process Password (API Key)
+                if ($password === '••••••••' || empty($password)) {
+                    // Preserving existing key
+                    if ($existing) {
+                        $encryptedPassword = $existing['smtp_password'];
+                    } else {
+                        $error = 'Please enter a Brevo API Key for the initial setup.';
+                    }
+                } else {
+                    // Encrypt key
+                    $encryptedPassword = encryptSMTPPassword($password);
+                }
+                
+                if (empty($error)) {
+                    if ($existing) {
+                        $stmt = $pdo->prepare("UPDATE smtp_settings SET smtp_host = ?, smtp_port = ?, smtp_username = ?, smtp_password = ?, smtp_encryption = ?, from_email = ?, from_name = ? WHERE id = ?");
+                        $stmt->execute([$host, $port, $user, $encryptedPassword, $encryption, $fromEmail, $fromName, $existing['id']]);
+                    } else {
+                        $stmt = $pdo->prepare("INSERT INTO smtp_settings (smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, from_email, from_name) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->execute([$host, $port, $user, $encryptedPassword, $encryption, $fromEmail, $fromName]);
+                    }
+                    
+                    $successMsg = 'Brevo API configurations updated successfully.';
+                    logActivity('SMTP_SETTINGS_CHANGED', 'Updated Brevo API configurations.');
+                }
+            } catch (Exception $e) {
+                $error = 'Database update failed: ' . $e->getMessage();
+            }
+        }
     }
 }
 
