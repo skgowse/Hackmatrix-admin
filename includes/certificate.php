@@ -136,10 +136,6 @@ class CertificateGenerator {
             $nameText = ucwords(strtolower($nameText));
         }
         
-        $salutation = trim($participant['salutation'] ?? '');
-        if ($salutation !== '') {
-            $nameText = $salutation . ' ' . $nameText;
-        }
         if ($nameText !== '') {
             $nameText .= ',';
         }

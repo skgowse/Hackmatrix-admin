@@ -59,13 +59,7 @@ foreach ($members as $index => $m) {
     $mobile = preg_replace('/[^0-9]/', '', $m['mobile'] ?? '');
     $branch = trim($m['branch'] ?? '');
     $year = trim($m['year'] ?? '');
-    
-    $salutation = trim($m['salutation'] ?? '');
-    $allowedSalutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
-    if (empty($salutation) || !in_array($salutation, $allowedSalutations)) {
-        jsonResponse(false, "Please select a valid Salutation (Mr., Miss., Mrs., Ms.) for Member $num.");
-    }
-    
+
     if (empty($name) || empty($email) || empty($mobile) || empty($branch) || empty($year)) {
         jsonResponse(false, "All fields are required for Member $num ($roleName).");
     }
@@ -154,7 +148,7 @@ try {
         }
         $branch = trim($m['branch'] ?? '');
         $year = trim($m['year'] ?? '');
-        $salutation = trim($m['salutation'] ?? '');
+        $salutation = '';
         $role = ($index === 0) ? 'Team Lead' : 'Member';
         
         // Generate member certificate ID: e.g. HM26-0005-1, HM26-0005-2, etc.

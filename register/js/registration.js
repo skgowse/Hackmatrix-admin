@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (card) {
                 const checkedBranch = card.querySelector('.member-branch-radio:checked');
                 currentData[i] = {
-                    salutation: card.querySelector('.member-salutation').value,
+                    salutation: '',
                     name: card.querySelector('.member-name').value,
                     email: card.querySelector('.member-email').value,
                     mobile: card.querySelector('.member-mobile').value,
@@ -97,13 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
 
-            // Generate salutation options
-            const salutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
-            let salutationOptions = '<option value="">Select Salutation</option>';
-            salutations.forEach(s => {
-                salutationOptions += `<option value="${s}" ${saved.salutation === s ? 'selected' : ''}>${s}</option>`;
-            });
-
             // Generate year options
             let yearOptions = '<option value="">Select Academic Year</option>';
             years.forEach(y => {
@@ -111,14 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             grid.innerHTML = `
-                <div class="form-group">
-                    <label>Salutation <span class="required">*</span></label>
-                    <select name="members[${index}][salutation]" class="form-control member-salutation">
-                        ${salutationOptions}
-                    </select>
-                </div>
-                
-                <div class="form-group">
+                <div class="form-group" style="grid-column: 1 / -1;">
                     <label>Full Name <span class="required">*</span></label>
                     <input type="text" name="members[${index}][name]" class="form-control member-name" placeholder="Enter full name" value="${saved.name}">
                 </div>
@@ -396,7 +382,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = document.querySelector(`.member-card[data-index="${i}"]`);
             if (!card) continue;
 
-            const salutationEl = card.querySelector('.member-salutation');
             const nameEl = card.querySelector('.member-name');
             const emailEl = card.querySelector('.member-email');
             const mobileEl = card.querySelector('.member-mobile');
@@ -404,54 +389,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const branchRadioElements = card.querySelectorAll('.member-branch-radio');
 
             if (allowNextField) {
-                salutationEl.disabled = false;
+                nameEl.disabled = false;
                 
-                if (salutationEl.value !== '') {
-                    nameEl.disabled = false;
+                if (nameEl.value.trim().length >= 3) {
+                    emailEl.disabled = false;
                     
-                    if (nameEl.value.trim().length >= 3) {
-                        emailEl.disabled = false;
+                    if (validationStates.emails[i] === true) {
+                        mobileEl.disabled = false;
                         
-                        if (validationStates.emails[i] === true) {
-                            mobileEl.disabled = false;
+                        if (validationStates.mobiles[i] === true) {
+                            yearEl.disabled = false;
                             
-                            if (validationStates.mobiles[i] === true) {
-                                yearEl.disabled = false;
+                            if (yearEl.value !== '') {
+                                branchRadioElements.forEach(r => r.disabled = false);
                                 
-                                if (yearEl.value !== '') {
-                                    branchRadioElements.forEach(r => r.disabled = false);
-                                    
-                                    const checkedBranch = card.querySelector('.member-branch-radio:checked');
-                                    if (checkedBranch) {
-                                        allowNextField = true;
-                                    } else {
-                                        allowNextField = false;
-                                    }
+                                const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                                if (checkedBranch) {
+                                    allowNextField = true;
                                 } else {
-                                    branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
                                     allowNextField = false;
                                 }
                             } else {
-                                yearEl.disabled = true;
-                                yearEl.value = '';
                                 branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
                                 allowNextField = false;
                             }
                         } else {
-                            mobileEl.disabled = true;
-                            mobileEl.value = '+91';
                             yearEl.disabled = true;
                             yearEl.value = '';
                             branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
                             allowNextField = false;
                         }
                     } else {
-                        emailEl.disabled = true;
-                        emailEl.value = '';
-                        const emailMsg = card.querySelector('.member-email-msg');
-                        if (emailMsg) emailMsg.innerText = '';
-                        validationStates.emails[i] = false;
-
                         mobileEl.disabled = true;
                         mobileEl.value = '+91';
                         yearEl.disabled = true;
@@ -460,8 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         allowNextField = false;
                     }
                 } else {
-                    nameEl.disabled = true;
-                    nameEl.value = '';
                     emailEl.disabled = true;
                     emailEl.value = '';
                     const emailMsg = card.querySelector('.member-email-msg');
@@ -476,8 +442,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     allowNextField = false;
                 }
             } else {
-                salutationEl.disabled = true;
-                salutationEl.value = '';
                 nameEl.disabled = true;
                 nameEl.value = '';
                 emailEl.disabled = true;
@@ -564,13 +528,6 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < size; i++) {
             const card = document.querySelector(`.member-card[data-index="${i}"]`);
             if (card) {
-                const salutationVal = card.querySelector('.member-salutation').value;
-                if (salutationVal === '') {
-                    showToast(`Please select a Salutation for Member #${i+1}.`, 'warning');
-                    card.querySelector('.member-salutation').focus();
-                    return;
-                }
-
                 const nameVal = card.querySelector('.member-name').value.trim();
                 if (nameVal === '') {
                     showToast(`Please enter the Full Name for Member #${i+1}.`, 'warning');

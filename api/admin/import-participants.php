@@ -145,7 +145,7 @@ foreach ($rowsData as $index => $row) {
     $members = [];
     for ($mNum = 1; $mNum <= 4; $mNum++) {
         $name = getVal($row, ["Member {$mNum} Name", "member_{$mNum}_name", "Member{$mNum}Name"]);
-        $salutation = getVal($row, ["Member {$mNum} Salutation", "member_{$mNum}_salutation", "Member{$mNum}Salutation"]);
+        $salutation = '';
         $email = strtolower(getVal($row, ["Member {$mNum} Email", "member_{$mNum}_email", "Member{$mNum}Email"]));
         $mobile = preg_replace('/[^0-9]/', '', getVal($row, ["Member {$mNum} Mobile", "member_{$mNum}_mobile", "Member{$mNum}Mobile"]));
         $branch = strtoupper(getVal($row, ["Member {$mNum} Branch", "member_{$mNum}_branch", "Member{$mNum}Branch"]));
@@ -198,20 +198,7 @@ foreach ($rowsData as $index => $row) {
             break;
         }
         
-        // Validate salutation
-        $matchedSalutation = '';
-        foreach ($allowedSalutations as $s) {
-            if (strcasecmp($m['salutation'], $s) === 0 || strcasecmp(rtrim($m['salutation'], '.'), rtrim($s, '.')) === 0) {
-                $matchedSalutation = $s;
-                break;
-            }
-        }
-        if (empty($matchedSalutation)) {
-            $errors[] = "Row $rowNum (Team '$teamName'): Salutation for $roleName must be Mr., Miss., Mrs., or Ms. Found: '{$m['salutation']}'.";
-            $memberValidationError = true;
-            break;
-        }
-        $members[$mIdx]['salutation'] = $matchedSalutation;
+        
         
         // Email validation
         $emailRes = validateEmailStrongly($m['email']);

@@ -386,13 +386,21 @@ require_once __DIR__ . '/header.php';
         for (let i = 0; i < size; i++) {
             const isLead = (i === 0);
             const index = i;
-            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '+91', branch: '', year: '', salutation: '' };
+            const saved = existingMembersData[i] || { id: '', name: '', email: '', mobile: '+91', branch: '', year: '' };
             const disabled = activeMode === 'view' ? 'disabled' : '';
             
             // Format phone number with +91
             let mobVal = saved.mobile ? (saved.mobile.startsWith('+91') ? saved.mobile : '+91' + saved.mobile) : '+91';
             
+            // Generate year options
+            let yearOptions = '<option value="">Select Year</option>';
+            years.forEach(y => {
+                yearOptions += `<option value="${y}" ${saved.year === y ? 'selected' : ''}>${y} Year</option>`;
+            });
+            
             const card = document.createElement('div');
+            card.className = 'member-card';
+            card.setAttribute('data-index', index);
             card.style.background = 'rgba(255,255,255,0.02)';
             card.style.border = '1px solid var(--border-color)';
             card.style.borderRadius = '10px';
@@ -415,18 +423,6 @@ require_once __DIR__ . '/header.php';
                     </label>
                 `;
             });
-
-            let yearOptions = '<option value="">Select Year</option>';
-            years.forEach(y => {
-                yearOptions += `<option value="${y}" ${saved.year === y ? 'selected' : ''}>${y} Year</option>`;
-            });
-            
-            // Generate salutation options
-            const salutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
-            let salutationOptions = '<option value="">Select Salutation</option>';
-            salutations.forEach(s => {
-                salutationOptions += `<option value="${s}" ${saved.salutation === s ? 'selected' : ''}>${s}</option>`;
-            });
             
             card.innerHTML = `
                 ${idField}
@@ -435,13 +431,7 @@ require_once __DIR__ . '/header.php';
                     <span style="color:var(--text-muted); font-size:11px;">${saved.certificate_id || 'Pending Generation'}</span>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-                    <div class="form-group">
-                        <label style="font-size:10px;">Salutation</label>
-                        <select name="members[${index}][salutation]" class="form-control member-salutation" ${disabled}>
-                            ${salutationOptions}
-                        </select>
-                    </div>
-                    <div class="form-group">
+                    <div class="form-group" style="grid-column: 1 / -1;">
                         <label style="font-size:10px;">Full Name</label>
                         <input type="text" name="members[${index}][name]" class="form-control" required value="${e(saved.name)}" ${disabled}>
                     </div>
@@ -501,7 +491,7 @@ require_once __DIR__ . '/header.php';
                         const checkedBranch = card.querySelector('.member-branch-radio:checked');
                         uiData[i] = {
                             id: idInput ? idInput.value : '',
-                            salutation: card.querySelector('.member-salutation').value,
+                            salutation: '',
                             name: nameInput.value,
                             email: document.querySelector(`input[name="members[${i}][email]"]`).value,
                             mobile: document.querySelector(`input[name="members[${i}][mobile]"]`).value,

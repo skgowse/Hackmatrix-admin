@@ -70,12 +70,7 @@ foreach ($members as $index => $m) {
     $num = $index + 1;
     $roleName = ($index === 0) ? 'Team Lead' : 'Member';
     
-    $salutation = trim($m['salutation'] ?? '');
-    $allowedSalutations = ['Mr.', 'Miss.', 'Mrs.', 'Ms.'];
-    if (empty($salutation) || !in_array($salutation, $allowedSalutations)) {
-        jsonResponse(false, "Please select a valid Salutation (Mr., Miss., Mrs., Ms.) for Member $num.");
-    }
-    
+
     if (empty($name) || empty($email) || empty($mobile) || empty($branch) || empty($year)) {
         jsonResponse(false, "All fields are required for Member $num ($roleName).");
     }
@@ -186,7 +181,7 @@ try {
         }
         $branch = trim($m['branch'] ?? '');
         $year = trim($m['year'] ?? '');
-        $salutation = trim($m['salutation'] ?? '');
+        $salutation = '';
         $role = ($index === 0) ? 'Team Lead' : 'Member';
         $memberCertId = $teamCode . "-" . ($index + 1);
         
