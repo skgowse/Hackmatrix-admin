@@ -568,11 +568,8 @@ require_once __DIR__ . '/header.php';
         const form = document.getElementById('teamModalForm');
         const formData = new FormData(form);
         
-        // Determine correct endpoint based on mode
-        let endpoint = '../api/admin/participant-update.php';
-        if (activeMode === 'add') {
-            endpoint = '../api/registration/register.php';
-        }
+        // Submit to unified admin team update endpoint
+        const endpoint = '../api/admin/participant-update.php';
         
         saveBtn.disabled = true;
         saveBtn.innerText = 'Saving changes...';

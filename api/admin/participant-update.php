@@ -23,9 +23,6 @@ if (!validateCSRFToken($csrfToken)) {
 }
 
 $teamDbId = intval($_POST['team_db_id'] ?? 0);
-if ($teamDbId <= 0) {
-    jsonResponse(false, 'Invalid team record identifier.');
-}
 
 // 2. Extract and Sanitize Inputs
 $teamName = trim($_POST['team_name'] ?? '');
@@ -92,13 +89,16 @@ try {
         jsonResponse(false, "The team name '$teamName' is already registered by another team.");
     }
     
-    // Fetch current team code
-    $stmtTeam = $pdo->prepare("SELECT team_id FROM teams WHERE id = ?");
-    $stmtTeam->execute([$teamDbId]);
-    $teamCode = $stmtTeam->fetchColumn();
-    
-    if (!$teamCode) {
-        jsonResponse(false, 'Team record not found.');
+    $teamCode = '';
+    if ($teamDbId > 0) {
+        // Fetch current team code
+        $stmtTeam = $pdo->prepare("SELECT team_id FROM teams WHERE id = ?");
+        $stmtTeam->execute([$teamDbId]);
+        $teamCode = $stmtTeam->fetchColumn();
+        
+        if (!$teamCode) {
+            jsonResponse(false, 'Team record not found.');
+        }
     }
     
     // Member checks
@@ -127,17 +127,38 @@ try {
     // 5. Update Database within Transaction
     $pdo->beginTransaction();
     
-    // Update Team profile
-    $stmt = $pdo->prepare("UPDATE teams SET team_name = ?, college = ?, team_size = ?, domain = ?, project_title = ?, status = ? WHERE id = ?");
-    $stmt->execute([
-        $teamName,
-        $college,
-        $teamSize,
-        $domain,
-        $projectTitle,
-        $status,
-        $teamDbId
-    ]);
+    if ($teamDbId > 0) {
+        // Update Team profile
+        $stmt = $pdo->prepare("UPDATE teams SET team_name = ?, college = ?, team_size = ?, domain = ?, project_title = ?, status = ? WHERE id = ?");
+        $stmt->execute([
+            $teamName,
+            $college,
+            $teamSize,
+            $domain,
+            $projectTitle,
+            $status,
+            $teamDbId
+        ]);
+    } else {
+        // Get next Team Sequence
+        $stmtSeq = $pdo->query("SELECT MAX(CAST(SUBSTRING(team_id, 6) AS UNSIGNED)) FROM teams");
+        $maxSeq = $stmtSeq->fetchColumn();
+        $newSeq = $maxSeq ? intval($maxSeq) + 1 : 1;
+        $teamCode = "HM26-" . str_pad($newSeq, 4, '0', STR_PAD_LEFT);
+        
+        // Insert Team profile
+        $stmt = $pdo->prepare("INSERT INTO teams (team_id, team_name, college, team_size, domain, project_title, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $teamCode,
+            $teamName,
+            $college,
+            $teamSize,
+            $domain,
+            $projectTitle,
+            $status
+        ]);
+        $teamDbId = $pdo->lastInsertId();
+    }
     
     // Identify submitted member IDs to determine which ones to delete
     $submittedMemberIds = [];
