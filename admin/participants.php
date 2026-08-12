@@ -346,7 +346,7 @@ require_once __DIR__ . '/header.php';
                 Team Members
             </h4>
             
-            <div id="modalMembersContainer" style="display:grid; grid-template-columns:1fr; gap:20px; max-height:40vh; overflow-y:auto; padding-right:5px;">
+            <div id="modalMembersContainer" style="display:grid; grid-template-columns:1fr; gap:20px; padding-right:5px;">
                 <!-- Members cards generated dynamically -->
             </div>
             
@@ -435,7 +435,7 @@ require_once __DIR__ . '/header.php';
                         <label style="font-size:10px;">Full Name</label>
                         <input type="text" name="members[${index}][name]" class="form-control" required value="${e(saved.name)}" ${disabled}>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="grid-column: 1 / -1;">
                         <label style="font-size:10px;">Email Address</label>
                         <input type="email" name="members[${index}][email]" class="form-control" required value="${e(saved.email)}" ${disabled}>
                     </div>
