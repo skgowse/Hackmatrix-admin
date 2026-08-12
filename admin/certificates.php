@@ -308,6 +308,7 @@ $tab = $_GET['tab'] ?? 'generate'; // 'generate' or 'send'
 // ---------------------------------------------------------
 $search = trim($_GET['search'] ?? '');
 $filterStatus = $_GET['status'] ?? ''; // Generated status or Email status
+$sort = trim($_GET['sort'] ?? 'id_desc');
 
 $queryStr = "SELECT p.*, c.status AS cert_status, c.id AS cert_tbl_id, e.status AS email_status, e.error_message 
              FROM participants p 
@@ -331,7 +332,16 @@ if ($filterStatus !== '') {
     $params[] = $filterStatus;
 }
 
-$queryStr .= " ORDER BY p.id DESC";
+$orderBy = "p.id DESC";
+if ($sort === 'id_asc') {
+    $orderBy = "p.id ASC";
+} elseif ($sort === 'name_asc') {
+    $orderBy = "p.participant_name ASC";
+} elseif ($sort === 'name_desc') {
+    $orderBy = "p.participant_name DESC";
+}
+
+$queryStr .= " ORDER BY $orderBy";
 $stmt = $pdo->prepare($queryStr);
 $stmt->execute($params);
 $candidatesList = $stmt->fetchAll();
@@ -438,6 +448,12 @@ $candidatesList = $stmt->fetchAll();
                     <option value="PENDING" <?= $filterStatus === 'PENDING' ? 'selected' : '' ?>>Pending</option>
                     <option value="GENERATED" <?= $filterStatus === 'GENERATED' ? 'selected' : '' ?>>Generated</option>
                     <option value="FAILED" <?= $filterStatus === 'FAILED' ? 'selected' : '' ?>>Failed</option>
+                </select>
+                <select name="sort" class="form-control" style="max-width: 180px; margin-bottom: 0;">
+                    <option value="id_desc" <?= $sort === 'id_desc' ? 'selected' : '' ?>>Newest First</option>
+                    <option value="id_asc" <?= $sort === 'id_asc' ? 'selected' : '' ?>>Oldest First</option>
+                    <option value="name_asc" <?= $sort === 'name_asc' ? 'selected' : '' ?>>Name (A-Z)</option>
+                    <option value="name_desc" <?= $sort === 'name_desc' ? 'selected' : '' ?>>Name (Z-A)</option>
                 </select>
                 <button type="submit" class="btn btn-secondary">Filter</button>
             </div>
@@ -611,6 +627,12 @@ $candidatesList = $stmt->fetchAll();
                     <option value="SENDING" <?= $filterStatus === 'SENDING' ? 'selected' : '' ?>>Sending</option>
                     <option value="SENT" <?= $filterStatus === 'SENT' ? 'selected' : '' ?>>Sent</option>
                     <option value="FAILED" <?= $filterStatus === 'FAILED' ? 'selected' : '' ?>>Failed</option>
+                </select>
+                <select name="sort" class="form-control" style="max-width: 180px; margin-bottom: 0;">
+                    <option value="id_desc" <?= $sort === 'id_desc' ? 'selected' : '' ?>>Newest First</option>
+                    <option value="id_asc" <?= $sort === 'id_asc' ? 'selected' : '' ?>>Oldest First</option>
+                    <option value="name_asc" <?= $sort === 'name_asc' ? 'selected' : '' ?>>Name (A-Z)</option>
+                    <option value="name_desc" <?= $sort === 'name_desc' ? 'selected' : '' ?>>Name (Z-A)</option>
                 </select>
                 <button type="submit" class="btn btn-secondary">Filter</button>
             </div>

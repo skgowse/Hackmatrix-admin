@@ -21,6 +21,7 @@ $search = trim($_GET['search'] ?? '');
 $domainFilter = trim($_GET['domain'] ?? '');
 $sizeFilter = trim($_GET['team_size'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
+$sort = trim($_GET['sort'] ?? 'id_desc');
 
 $limit = 10;
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -64,7 +65,16 @@ try {
     $totalPages = ceil($totalRows / $limit);
     
     // Retrieve paginated records
-    $queryStr .= " ORDER BY t.id DESC LIMIT $limit OFFSET $offset";
+    $orderBy = "t.id DESC";
+    if ($sort === 'id_asc') {
+        $orderBy = "t.id ASC";
+    } elseif ($sort === 'name_asc') {
+        $orderBy = "t.team_name ASC";
+    } elseif ($sort === 'name_desc') {
+        $orderBy = "t.team_name DESC";
+    }
+    
+    $queryStr .= " ORDER BY $orderBy LIMIT $limit OFFSET $offset";
     $stmt = $pdo->prepare($queryStr);
     $stmt->execute($params);
     $teams = $stmt->fetchAll();
@@ -139,9 +149,16 @@ require_once __DIR__ . '/header.php';
             <option value="INACTIVE" <?= $statusFilter === 'INACTIVE' ? 'selected' : '' ?>>INACTIVE</option>
         </select>
         
+        <select name="sort" class="form-control" style="max-width: 180px; margin-bottom: 0;">
+            <option value="id_desc" <?= $sort === 'id_desc' ? 'selected' : '' ?>>Newest First</option>
+            <option value="id_asc" <?= $sort === 'id_asc' ? 'selected' : '' ?>>Oldest First</option>
+            <option value="name_asc" <?= $sort === 'name_asc' ? 'selected' : '' ?>>Team Name (A-Z)</option>
+            <option value="name_desc" <?= $sort === 'name_desc' ? 'selected' : '' ?>>Team Name (Z-A)</option>
+        </select>
+        
         <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">Filter</button>
         
-        <?php if ($search !== '' || $domainFilter !== '' || $sizeFilter !== '' || $statusFilter !== ''): ?>
+        <?php if ($search !== '' || $domainFilter !== '' || $sizeFilter !== '' || $statusFilter !== '' || $sort !== 'id_desc'): ?>
             <a href="participants.php" class="btn btn-secondary" style="padding: 10px 16px;">Clear</a>
         <?php endif; ?>
     </form>
