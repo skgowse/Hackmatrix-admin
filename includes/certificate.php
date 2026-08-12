@@ -180,6 +180,13 @@ class CertificateGenerator {
         }
 
         // 2. Draw Branch / Department
+        $charCount = strlen($branchText);
+        if ($charCount > 35) {
+            $branchSize = $branchSize * 0.60;
+        } elseif ($charCount > 20) {
+            $branchSize = $branchSize * 0.75;
+        }
+        
         $pdf->SetFont($branchFont, $branchStyle, $branchSize);
         $pdf->SetTextColor($br, $bg, $bb);
         $branchCellHeight = $branchSize * 0.45;
