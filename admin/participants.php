@@ -402,7 +402,7 @@ require_once __DIR__ . '/header.php';
                     </div>
                     <div class="form-group">
                         <label style="font-size:10px;">Mobile Number</label>
-                        <input type="text" name="members[${index}][mobile]" class="form-control member-mobile" required value="${mobVal}" ${disabled} pattern="\\+91[0-9]{10}">
+                        <input type="text" name="members[${index}][mobile]" class="form-control member-mobile" required value="${mobVal}" ${disabled} pattern="\\+91[0-9]{10}" maxlength="13">
                     </div>
                     <div class="form-group">
                         <label style="font-size:10px;">Year</label>

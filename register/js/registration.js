@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="form-group">
                     <label>Mobile Number <span class="required">*</span></label>
-                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="+91 XXXXXXXXXX" value="${saved.mobile || '+91'}" pattern="\\+91[0-9]{10}">
+                    <input type="tel" name="members[${index}][mobile]" class="form-control member-mobile" placeholder="+91 XXXXXXXXXX" value="${saved.mobile || '+91'}" pattern="\\+91[0-9]{10}" maxlength="13">
                     <div class="validation-message member-mobile-msg"></div>
                 </div>
 
