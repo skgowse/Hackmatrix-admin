@@ -88,6 +88,10 @@ require_once __DIR__ . '/header.php';
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Team
         </button>
+        <button onclick="openImportModal()" class="btn btn-secondary" style="border-color: var(--primary); color: #38bdf8;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import CSV/Excel
+        </button>
         <button onclick="triggerExport('csv')" class="btn btn-secondary">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
@@ -237,6 +241,46 @@ require_once __DIR__ . '/header.php';
     <?php endif; ?>
 </div>
 
+<!-- ==================== IMPORT TEAMS MODAL ==================== -->
+<div id="importTeamsModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:1000; padding:20px;">
+    <div class="modal" style="width:100%; max-width: 650px; background:#0f172a; border: 1px solid var(--border-color); border-radius:16px; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.5); display:flex; flex-direction:column; max-height:90vh; overflow-y:auto;">
+        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:20px;">
+            <h3 style="color:white; font-size:18px; font-weight:700;">Import Teams (CSV / Excel)</h3>
+            <button onclick="closeImportModal()" style="background:none; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        
+        <form id="importForm" onsubmit="handleImportSubmit(event)">
+            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+            
+            <div style="margin-bottom: 20px;">
+                <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 15px;">
+                    Upload a CSV or Excel file (.xlsx, .xls) containing team registrations. Each team must have a unique name and between 2 to 4 members.
+                </p>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button type="button" onclick="downloadImportTemplate()" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Sample Template (.csv)
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Select File <span class="required">*</span></label>
+                <input type="file" name="import_file" id="import_file" class="form-control" accept=".csv, .xlsx, .xls" required style="padding: 8px;">
+            </div>
+            
+            <!-- Result Output Box -->
+            <div id="importResults" style="display: none; margin-top: 15px; padding: 15px; border-radius: 8px; font-size: 13px; max-height: 250px; overflow-y: auto;">
+            </div>
+            
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border-color); padding-top:20px; margin-top:20px;">
+                <button type="button" onclick="closeImportModal()" class="btn btn-secondary">Close</button>
+                <button type="submit" id="importSubmitBtn" class="btn btn-primary">Start Import</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ==================== DETAILED VIEW / EDIT MODAL ==================== -->
 <div id="teamDetailsModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:1000; padding:20px;">
     <div class="modal" style="width:100%; max-width: 850px; background:#0f172a; border: 1px solid var(--border-color); border-radius:16px; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.5); display:flex; flex-direction:column; max-height:90vh; overflow-y:auto;">
@@ -322,6 +366,11 @@ require_once __DIR__ . '/header.php';
     const modalTitle = document.getElementById('modalTitle');
     const saveBtn = document.getElementById('saveTeamBtn');
     const sizeSelect = document.getElementById('modal_team_size');
+    
+    const importModal = document.getElementById('importTeamsModal');
+    const importForm = document.getElementById('importForm');
+    const importSubmitBtn = document.getElementById('importSubmitBtn');
+    const importResults = document.getElementById('importResults');
     
     let activeMode = 'view'; // 'view', 'edit', 'add'
     let existingMembersData = []; // Cached when editing
@@ -612,6 +661,122 @@ require_once __DIR__ . '/header.php';
         const queryParams = new URLSearchParams(window.location.search);
         let endpoint = format === 'csv' ? '../api/admin/export-csv.php' : '../api/admin/export-excel.php';
         window.location.href = endpoint + '?' + queryParams.toString();
+    }
+
+    // Import modal handlers
+    function openImportModal() {
+        importForm.reset();
+        importResults.style.display = 'none';
+        importResults.innerHTML = '';
+        importSubmitBtn.disabled = false;
+        importSubmitBtn.innerText = 'Start Import';
+        importModal.style.display = 'flex';
+    }
+
+    function closeImportModal() {
+        importModal.style.display = 'none';
+    }
+
+    function downloadImportTemplate() {
+        const headers = [
+            'Team Name', 'College', 'Domain',
+            'Member 1 Salutation', 'Member 1 Name', 'Member 1 Email', 'Member 1 Mobile', 'Member 1 Branch', 'Member 1 Year',
+            'Member 2 Salutation', 'Member 2 Name', 'Member 2 Email', 'Member 2 Mobile', 'Member 2 Branch', 'Member 2 Year',
+            'Member 3 Salutation', 'Member 3 Name', 'Member 3 Email', 'Member 3 Mobile', 'Member 3 Branch', 'Member 3 Year',
+            'Member 4 Salutation', 'Member 4 Name', 'Member 4 Email', 'Member 4 Mobile', 'Member 4 Branch', 'Member 4 Year'
+        ];
+        
+        const rowSample1 = [
+            'Code Wizards', 'VIIT', 'AI & ML',
+            'Mr.', 'John Doe', 'john.doe@gmail.com', '9876543210', 'CSE', '3',
+            'Miss.', 'Jane Smith', 'jane.smith@gmail.com', '9876543211', 'ECE', '3',
+            'Mr.', 'Bob Johnson', 'bob.johnson@gmail.com', '9876543212', 'IT', '3',
+            '', '', '', '', '', ''
+        ];
+        
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + [headers.join(','), rowSample1.join(',')].join('\n');
+            
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "hackmatrix_import_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function handleImportSubmit(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('import_file');
+        if (!fileInput.files.length) {
+            showToast('Please select a file to import.', 'warning');
+            return;
+        }
+        
+        importSubmitBtn.disabled = true;
+        importSubmitBtn.innerText = 'Importing...';
+        importResults.style.display = 'block';
+        importResults.style.background = 'rgba(255, 255, 255, 0.05)';
+        importResults.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        importResults.innerHTML = '<span style="color: white; font-weight: 500;">Reading file and validating entries, please wait...</span>';
+        
+        const formData = new FormData(importForm);
+        
+        fetch('../api/admin/import-participants.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const results = data.data;
+                const errCount = results.errors.length;
+                
+                let html = `<div style="font-weight: 700; font-size: 14px; margin-bottom: 10px; color: #34d399;">Import Completed!</div>`;
+                html += `<div style="margin-bottom: 12px; color: var(--text-muted);">Successfully imported <strong>${results.success_count}</strong> of <strong>${results.total_rows}</strong> teams.</div>`;
+                
+                if (errCount > 0) {
+                    importResults.style.border = '1px solid rgba(248, 113, 113, 0.3)';
+                    importResults.style.background = 'rgba(248, 113, 113, 0.05)';
+                    html += `<div style="font-weight: 700; color: #f87171; margin-top: 15px; margin-bottom: 8px;">Warnings / Errors (${errCount}):</div>`;
+                    html += `<ul style="list-style-type: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">`;
+                    results.errors.forEach(err => {
+                        html += `<li style="color: #fca5a5; padding-left: 15px; position: relative;">
+                            <span style="position: absolute; left: 0; color: #f87171;">•</span> ${e(err)}
+                        </li>`;
+                    });
+                    html += `</ul>`;
+                } else {
+                    importResults.style.border = '1px solid rgba(52, 211, 153, 0.3)';
+                    importResults.style.background = 'rgba(52, 211, 153, 0.05)';
+                }
+                
+                importResults.innerHTML = html;
+                importSubmitBtn.innerText = 'Import Finished';
+                
+                if (results.success_count > 0) {
+                    showToast(`Imported ${results.success_count} teams successfully!`, 'success');
+                    setTimeout(() => window.location.reload(), 3000);
+                } else {
+                    showToast('Import failed. Please fix template errors.', 'danger');
+                    importSubmitBtn.disabled = false;
+                    importSubmitBtn.innerText = 'Retry Import';
+                }
+            } else {
+                showToast(data.message, 'danger');
+                importResults.style.display = 'none';
+                importSubmitBtn.disabled = false;
+                importSubmitBtn.innerText = 'Start Import';
+            }
+        })
+        .catch(err => {
+            showToast('Connection error during import execution.', 'danger');
+            importResults.style.display = 'none';
+            importSubmitBtn.disabled = false;
+            importSubmitBtn.innerText = 'Start Import';
+        });
     }
 
     // Utility string HTML escaper
