@@ -1,36 +1,6 @@
-import * as z from 'https://cdn.jsdelivr.net/npm/zod@3.22.4/+esm';
-
 /**
  * HackMatrix 1.0 - Dynamic Registration Controller
  */
-
-// Define Zod Validation Schemas
-const MemberSchema = z.object({
-    salutation: z.enum(['Mr.', 'Miss.', 'Mrs.', 'Ms.'], {
-        errorMap: () => ({ message: 'Please select a valid Salutation.' })
-    }),
-    name: z.string().min(3, 'Full Name must be at least 3 characters.').max(100, 'Full Name is too long.'),
-    email: z.string().email('Invalid email address format.'),
-    mobile: z.string().regex(/^\+91[0-9]{10}$/, 'Mobile number must be +91 followed by exactly 10 digits.'),
-    branch: z.enum(['AI&DS', 'ECE', 'ECM', 'IT', 'MECH', 'CIVIL', 'EEE', 'CSE', 'CSE-AI', 'CSE-DS', 'CSE-CS', 'AI&ML'], {
-        errorMap: () => ({ message: 'Please select a valid Branch.' })
-    }),
-    year: z.enum(['1', '2', '3', '4'], {
-        errorMap: () => ({ message: 'Please select a valid Academic Year.' })
-    })
-});
-
-const RegistrationSchema = z.object({
-    teamName: z.string().min(3, 'Team Name must be at least 3 characters.').max(50, 'Team Name must be under 50 characters.'),
-    college: z.enum(['VIIT', 'VIEW'], {
-        errorMap: () => ({ message: 'Please select a valid College Name.' })
-    }),
-    teamSize: z.number().int().min(2).max(4),
-    domain: z.enum(['AI & ML', 'Cloud Computing', 'Cybersecurity', 'Robotics'], {
-        errorMap: () => ({ message: 'Please select a valid Hackathon Domain.' })
-    }),
-    members: z.array(MemberSchema)
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     const teamSizeSelect = document.getElementById('team_size');
@@ -200,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (email === '') {
                 emailMsg.innerText = '';
                 validationStates.emails[index] = false;
+                refreshFormProgression();
                 return;
             }
             
@@ -208,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 emailMsg.className = 'validation-message invalid';
                 emailMsg.innerText = 'Invalid email format.';
                 validationStates.emails[index] = false;
+                refreshFormProgression();
                 return;
             }
 
@@ -220,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 emailMsg.className = 'validation-message invalid';
                 emailMsg.innerText = 'This email is entered twice on this form.';
                 validationStates.emails[index] = false;
+                refreshFormProgression();
                 return;
             }
 
@@ -239,10 +212,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         emailMsg.innerText = '❌ ' + data.message;
                         validationStates.emails[index] = false;
                     }
+                    refreshFormProgression();
                 })
                 .catch(() => {
                     emailMsg.innerText = 'Offline validation skipped.';
                     validationStates.emails[index] = true;
+                    refreshFormProgression();
                 });
         }));
 
@@ -262,6 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (mobile === '') {
                 mobileMsg.innerText = '';
                 validationStates.mobiles[index] = false;
+                refreshFormProgression();
                 return;
             }
 
@@ -269,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mobileMsg.className = 'validation-message invalid';
                 mobileMsg.innerText = 'Must be exactly 10 digits after +91.';
                 validationStates.mobiles[index] = false;
+                refreshFormProgression();
                 return;
             }
 
@@ -280,6 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mobileMsg.className = 'validation-message invalid';
                 mobileMsg.innerText = 'This phone is entered twice on this form.';
                 validationStates.mobiles[index] = false;
+                refreshFormProgression();
                 return;
             }
 
@@ -299,10 +277,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         mobileMsg.innerText = '❌ ' + data.message;
                         validationStates.mobiles[index] = false;
                     }
+                    refreshFormProgression();
                 })
                 .catch(() => {
                     mobileMsg.innerText = 'Offline validation skipped.';
                     validationStates.mobiles[index] = true;
+                    refreshFormProgression();
                 });
         }));
     }
@@ -313,6 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (name === '') {
             teamNameMsg.innerText = '';
             validationStates.teamName = false;
+            refreshFormProgression();
             return;
         }
 
@@ -331,103 +312,249 @@ document.addEventListener('DOMContentLoaded', function() {
                     teamNameMsg.innerText = '❌ ' + data.message;
                     validationStates.teamName = false;
                 }
+                refreshFormProgression();
             })
             .catch(() => {
                 teamNameMsg.innerText = 'Offline validation skipped.';
                 validationStates.teamName = true;
+                refreshFormProgression();
             });
     }));
 
-    function handleTeamSizeChange(value) {
-        const size = parseInt(value);
-        if (!isNaN(size) && size >= 2 && size <= 4) {
-            renderMemberCards(size);
+    const collegeSelect = document.getElementById('college');
+    const domainSelect = document.getElementById('domain');
+
+    function refreshFormProgression() {
+        // Step 1: Team Name -> College
+        if (validationStates.teamName === true && teamNameInput.value.trim() !== '') {
+            collegeSelect.disabled = false;
         } else {
+            collegeSelect.disabled = true;
+            collegeSelect.value = '';
+            teamSizeSelect.disabled = true;
+            teamSizeSelect.value = '';
+            domainSelect.disabled = true;
+            domainSelect.value = '';
             membersContainer.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: rgba(255,255,255,0.01); border: 1px dashed var(--border-color); border-radius: 12px; width: 100%;">
                     Please select a team size to enter member details.
                 </div>
             `;
+            submitBtn.disabled = true;
+            return;
+        }
+
+        // Step 2: College -> Team Size
+        if (collegeSelect.value !== '') {
+            teamSizeSelect.disabled = false;
+        } else {
+            teamSizeSelect.disabled = true;
+            teamSizeSelect.value = '';
+            domainSelect.disabled = true;
+            domainSelect.value = '';
+            membersContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: rgba(255,255,255,0.01); border: 1px dashed var(--border-color); border-radius: 12px; width: 100%;">
+                    Please select a team size to enter member details.
+                </div>
+            `;
+            submitBtn.disabled = true;
+            return;
+        }
+
+        // Step 3: Team Size -> Domain
+        const size = parseInt(teamSizeSelect.value);
+        if (!isNaN(size) && size >= 2 && size <= 4) {
+            domainSelect.disabled = false;
+        } else {
+            domainSelect.disabled = true;
+            domainSelect.value = '';
+            membersContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: rgba(255,255,255,0.01); border: 1px dashed var(--border-color); border-radius: 12px; width: 100%;">
+                    Please select a team size to enter member details.
+                </div>
+            `;
+            submitBtn.disabled = true;
+            return;
+        }
+
+        // Step 4: Domain -> Member Details Cards
+        if (domainSelect.value !== '') {
+            const cards = document.querySelectorAll('.member-card');
+            if (cards.length !== size) {
+                renderMemberCards(size);
+                return;
+            }
+        } else {
+            submitBtn.disabled = true;
+            document.querySelectorAll('.member-card input, .member-card select').forEach(el => el.disabled = true);
+            return;
+        }
+
+        // Step 5: Members Cards progression loop
+        let allowNextField = true;
+        for (let i = 0; i < size; i++) {
+            const card = document.querySelector(`.member-card[data-index="${i}"]`);
+            if (!card) continue;
+
+            const salutationEl = card.querySelector('.member-salutation');
+            const nameEl = card.querySelector('.member-name');
+            const emailEl = card.querySelector('.member-email');
+            const mobileEl = card.querySelector('.member-mobile');
+            const yearEl = card.querySelector('.member-year');
+            const branchRadioElements = card.querySelectorAll('.member-branch-radio');
+
+            if (allowNextField) {
+                salutationEl.disabled = false;
+                
+                if (salutationEl.value !== '') {
+                    nameEl.disabled = false;
+                    
+                    if (nameEl.value.trim().length >= 3) {
+                        emailEl.disabled = false;
+                        
+                        if (validationStates.emails[i] === true) {
+                            mobileEl.disabled = false;
+                            
+                            if (validationStates.mobiles[i] === true) {
+                                yearEl.disabled = false;
+                                
+                                if (yearEl.value !== '') {
+                                    branchRadioElements.forEach(r => r.disabled = false);
+                                    
+                                    const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                                    if (checkedBranch) {
+                                        allowNextField = true;
+                                    } else {
+                                        allowNextField = false;
+                                    }
+                                } else {
+                                    branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
+                                    allowNextField = false;
+                                }
+                            } else {
+                                yearEl.disabled = true;
+                                yearEl.value = '';
+                                branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
+                                allowNextField = false;
+                            }
+                        } else {
+                            mobileEl.disabled = true;
+                            mobileEl.value = '+91';
+                            yearEl.disabled = true;
+                            yearEl.value = '';
+                            branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
+                            allowNextField = false;
+                        }
+                    } else {
+                        emailEl.disabled = true;
+                        emailEl.value = '';
+                        const emailMsg = card.querySelector('.member-email-msg');
+                        if (emailMsg) emailMsg.innerText = '';
+                        validationStates.emails[i] = false;
+
+                        mobileEl.disabled = true;
+                        mobileEl.value = '+91';
+                        yearEl.disabled = true;
+                        yearEl.value = '';
+                        branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
+                        allowNextField = false;
+                    }
+                } else {
+                    nameEl.disabled = true;
+                    nameEl.value = '';
+                    emailEl.disabled = true;
+                    emailEl.value = '';
+                    const emailMsg = card.querySelector('.member-email-msg');
+                    if (emailMsg) emailMsg.innerText = '';
+                    validationStates.emails[i] = false;
+
+                    mobileEl.disabled = true;
+                    mobileEl.value = '+91';
+                    yearEl.disabled = true;
+                    yearEl.value = '';
+                    branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
+                    allowNextField = false;
+                }
+            } else {
+                salutationEl.disabled = true;
+                salutationEl.value = '';
+                nameEl.disabled = true;
+                nameEl.value = '';
+                emailEl.disabled = true;
+                emailEl.value = '';
+                const emailMsg = card.querySelector('.member-email-msg');
+                if (emailMsg) emailMsg.innerText = '';
+                validationStates.emails[i] = false;
+
+                mobileEl.disabled = true;
+                mobileEl.value = '+91';
+                yearEl.disabled = true;
+                yearEl.value = '';
+                branchRadioElements.forEach(r => { r.disabled = true; r.checked = false; });
+            }
+        }
+
+        if (allowNextField) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
         }
     }
 
-    // Trigger initial render
-    handleTeamSizeChange(teamSizeSelect.value);
+    function handleTeamSizeChange(value) {
+        const size = parseInt(value);
+        if (!isNaN(size) && size >= 2 && size <= 4) {
+            renderMemberCards(size);
+        }
+    }
 
-    // Handle Team Size updates
+    // Register all event listeners for form flow
+    collegeSelect.addEventListener('change', refreshFormProgression);
     teamSizeSelect.addEventListener('change', function() {
         handleTeamSizeChange(this.value);
+        refreshFormProgression();
     });
+    domainSelect.addEventListener('change', refreshFormProgression);
+
+    // Event delegation on dynamic cards inside membersContainer
+    membersContainer.addEventListener('input', refreshFormProgression);
+    membersContainer.addEventListener('change', refreshFormProgression);
+
+    // Initial setup
+    refreshFormProgression();
 
     // Form Submission Handler
     registrationForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
+        // 1. Double check client validation states
         const size = parseInt(teamSizeSelect.value);
-        const collegeSelect = document.getElementById('college');
-        const domainSelect = document.getElementById('domain');
-
-        // Compile payload for Zod validation
-        const membersData = [];
-        for (let i = 0; i < size; i++) {
-            const card = document.querySelector(`.member-card[data-index="${i}"]`);
-            if (card) {
-                const checkedBranch = card.querySelector('.member-branch-radio:checked');
-                membersData.push({
-                    salutation: card.querySelector('.member-salutation').value,
-                    name: card.querySelector('.member-name').value.trim(),
-                    email: card.querySelector('.member-email').value.trim(),
-                    mobile: card.querySelector('.member-mobile').value.trim(),
-                    branch: checkedBranch ? checkedBranch.value : '',
-                    year: card.querySelector('.member-year').value
-                });
-            }
-        }
-
-        const formData = {
-            teamName: teamNameInput.value.trim(),
-            college: collegeSelect.value,
-            teamSize: size,
-            domain: domainSelect.value,
-            members: membersData
-        };
-
-        // Run Zod validation
-        const validationResult = RegistrationSchema.safeParse(formData);
-        if (!validationResult.success) {
-            const firstError = validationResult.error.errors[0];
-            let errorMsg = firstError.message;
-            
-            // Format error message to specify which member it relates to
-            if (firstError.path[0] === 'members') {
-                const memberIdx = parseInt(firstError.path[1]) + 1;
-                errorMsg = `Member #${memberIdx}: ${errorMsg}`;
-            }
-            
-            showToast(errorMsg, 'warning');
-            
-            // Focus on the erroneous input element if possible
-            if (firstError.path[0] === 'members') {
-                const idx = firstError.path[1];
-                const field = firstError.path[2];
-                const card = document.querySelector(`.member-card[data-index="${idx}"]`);
-                if (card) {
-                    if (field === 'salutation') card.querySelector('.member-salutation').focus();
-                    else if (field === 'name') card.querySelector('.member-name').focus();
-                    else if (field === 'email') card.querySelector('.member-email').focus();
-                    else if (field === 'mobile') card.querySelector('.member-mobile').focus();
-                    else if (field === 'year') card.querySelector('.member-year').focus();
-                }
-            } else {
-                if (firstError.path[0] === 'teamName') teamNameInput.focus();
-                else if (firstError.path[0] === 'college') collegeSelect.focus();
-                else if (firstError.path[0] === 'domain') domainSelect.focus();
-            }
-            
+        if (isNaN(size) || size < 2 || size > 4) {
+            showToast('Please select a valid team size.', 'warning');
+            teamSizeSelect.focus();
             return;
         }
 
-        // 2. Uniqueness and DB validation state checks
+        if (teamNameInput.value.trim() === '') {
+            showToast('Please enter a Team Name.', 'warning');
+            teamNameInput.focus();
+            return;
+        }
+
+        const collegeSelect = document.getElementById('college');
+        if (collegeSelect.value === '') {
+            showToast('Please select your College Name.', 'warning');
+            collegeSelect.focus();
+            return;
+        }
+
+        const domainSelect = document.getElementById('domain');
+        if (domainSelect.value === '') {
+            showToast('Please select a Hackathon Domain.', 'warning');
+            domainSelect.focus();
+            return;
+        }
+        
         if (!validationStates.teamName) {
             showToast('Please choose a valid, unique team name.', 'warning');
             teamNameInput.focus();
@@ -435,6 +562,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         for (let i = 0; i < size; i++) {
+            const card = document.querySelector(`.member-card[data-index="${i}"]`);
+            if (card) {
+                const salutationVal = card.querySelector('.member-salutation').value;
+                if (salutationVal === '') {
+                    showToast(`Please select a Salutation for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-salutation').focus();
+                    return;
+                }
+
+                const nameVal = card.querySelector('.member-name').value.trim();
+                if (nameVal === '') {
+                    showToast(`Please enter the Full Name for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-name').focus();
+                    return;
+                }
+
+                const emailVal = card.querySelector('.member-email').value.trim();
+                if (emailVal === '') {
+                    showToast(`Please enter the Email Address for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-email').focus();
+                    return;
+                }
+
+                const mobileVal = card.querySelector('.member-mobile').value.trim();
+                if (mobileVal === '' || mobileVal === '+91') {
+                    showToast(`Please enter the Mobile Number for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-mobile').focus();
+                    return;
+                }
+
+                const checkedBranch = card.querySelector('.member-branch-radio:checked');
+                if (!checkedBranch) {
+                    showToast(`Please select a Branch for Member #${i+1}.`, 'warning');
+                    return;
+                }
+                const yearVal = card.querySelector('.member-year').value;
+                if (yearVal === '') {
+                    showToast(`Please select an Academic Year for Member #${i+1}.`, 'warning');
+                    card.querySelector('.member-year').focus();
+                    return;
+                }
+            }
+
             if (!validationStates.emails[i]) {
                 showToast(`Please verify the email address for Member #${i+1}.`, 'warning');
                 document.querySelector(`.member-card[data-index="${i}"] .member-email`).focus();

@@ -59,7 +59,7 @@ require_once __DIR__ . '/../includes/functions.php';
                     
                     <div class="form-group">
                         <label for="college">COLLEGE / INSTITUTION <span class="required">*</span></label>
-                        <select id="college" name="college" class="form-control">
+                        <select id="college" name="college" class="form-control" disabled>
                             <option value="">Select College Name</option>
                             <option value="VIIT">VIIT</option>
                             <option value="VIEW">VIEW</option>
@@ -68,7 +68,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
                     <div class="form-group">
                         <label for="team_size">TEAM SIZE (MEMBERS) <span class="required">*</span></label>
-                        <select id="team_size" name="team_size" class="form-control">
+                        <select id="team_size" name="team_size" class="form-control" disabled>
                             <option value="">Select Team Size</option>
                             <option value="2">2 Members</option>
                             <option value="3">3 Members</option>
@@ -80,7 +80,7 @@ require_once __DIR__ . '/../includes/functions.php';
                 <div style="margin-top: 20px;">
                     <div class="form-group" style="max-width: 500px;">
                         <label for="domain">HACKATHON DOMAIN <span class="required">*</span></label>
-                        <select id="domain" name="domain" class="form-control">
+                        <select id="domain" name="domain" class="form-control" disabled>
                             <option value="">Select Hackathon Domain</option>
                             <option value="AI & ML">AI & ML (Artificial Intelligence & Machine Learning)</option>
                             <option value="Cloud Computing">Cloud Computing</option>
@@ -106,7 +106,7 @@ require_once __DIR__ . '/../includes/functions.php';
             <div class="submission-panel">
                 <p class="terms-disclaimer">By registering, you confirm that all details provided are accurate and that participant email addresses are unique and belong to your team members.</p>
                 
-                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" disabled>
                     <span class="btn-text">Register Team</span>
                     <span class="spinner" style="display: none;"></span>
                 </button>
@@ -145,6 +145,6 @@ require_once __DIR__ . '/../includes/functions.php';
     </div>
 
     <!-- Dynamic JavaScript and Validation Controllers -->
-    <script type="module" src="js/registration.js"></script>
+    <script src="js/registration.js"></script>
 </body>
 </html>
